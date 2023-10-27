@@ -4,11 +4,11 @@ import ready from "./listeners/ready";
 import interactionCreate from "./listeners/interactionCreate";
 import 'dotenv/config'
 const EraserTail = new EraserTailClient({
-  APPLICATION_NAME: "TEST_BOT",
-  APPLICATION_NAME_HUMAN: "Test",
+  APPLICATION_NAME: "DIRICE",
+  APPLICATION_NAME_HUMAN: "Dirice",
   APPLICATION_COLOR_PRIMARY: "#36393f",
   APPLICATION_COLOR_SECONDARY: "#ffffff",
-  APPLICATION_PREFIX: "TEST >> ",
+  APPLICATION_PREFIX: "DIRICE >> ",
   APPLICATION_LOGGING_STYLES: null,
   APPLICATION_ICON: "https://media.discordapp.net/attachments/1028722861428441098/1031362596110082149/pencilfox_icon.png",
   LOG_TO_CLOUD: true,

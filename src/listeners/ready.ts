@@ -26,7 +26,7 @@ export default (client: Client, EraserTail: EraserTailClient): void => {
             status: "idle",
             activities: [
                 {
-                    name: "pnfx.dev",
+                    name: "for rolls",
                     type: 3,
                 }
             ],
