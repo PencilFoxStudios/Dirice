@@ -2,7 +2,7 @@ import { ColorResolvable, EmbedBuilder, EmbedField, User } from 'discord.js'
 import moment from 'moment'
 import * as PNFXTypes from "./types"
 
-export function error(code: PNFXTypes.PNFXBotErrorCode = "UNK"): EmbedBuilder {
+export function error(code: PNFXTypes.PNFXBotErrorCode = "UNK", moreInfo?: string): EmbedBuilder {
     const embed = new EmbedBuilder()
         .setColor(0xda4453)
         .setTitle("An error has occurred.")
@@ -11,6 +11,12 @@ export function error(code: PNFXTypes.PNFXBotErrorCode = "UNK"): EmbedBuilder {
         .setFooter({
             text: `Error Code: ${code}`
         })
+    if(moreInfo){
+        embed.addFields({
+            name: "Hint",
+            value: moreInfo
+        })
+    }
     return embed
 }
 
@@ -20,6 +26,14 @@ export function success(text: string = "The action was proformed successfully!")
         .setTitle("Success!")
         .setDescription(text)
         .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Sign-check-icon.png/800px-Sign-check-icon.png")
+    return embed
+}
+export function loading(loadingText: string = "Processing...") {
+    const embed = new EmbedBuilder()
+        .setColor(0x6215af)
+        .setTitle("Please wait...")
+        .setDescription(loadingText)
+        .setThumbnail("https://i.ibb.co/5KPjPZS/diceload.gif")
     return embed
 }
 export function info(title: string | null = null, information: string | null = null, color: ColorResolvable = 0x4fc1f1) {

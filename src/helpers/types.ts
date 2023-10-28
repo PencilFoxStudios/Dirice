@@ -23,12 +23,16 @@ export const PNFXBotError = {
     PRETTY: "**This command is not configured for this method of use.**\nIf you believe this is an error, please contact the developers.",
     RAW: "Unconfigured command usage."
   },
+  "CHARACTER_NOT_FOUND": {
+    PRETTY: "**The specified character could not be found.**\nDo you have access to it?",
+    RAW: "Character not found."
+  },
   "USER_NOT_FOUND": {
     PRETTY: "**The specified user could not be found.**\nThey may have either left the server, my cache, or both!",
     RAW: "User not found."
   },
   "GENERAL_COMMAND_ERROR": {
-    PRETTY: "**Action could not be completed.**\nPossible reasons for this are you not having enough permissions, a specified user left the server, or some API is down. Please start over for the most up-to-date options.",
+    PRETTY: "**Action could not be completed.**\nPossible reasons for this are you not having enough permissions or some API is down. Please start over for the most up-to-date options.",
     RAW: "Action failed."
   },
   "NO_OPTIONS_AVAILABLE": {
