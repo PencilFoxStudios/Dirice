@@ -114,6 +114,16 @@ export async function isUserModerator(userID: string, guild: Guild, EraserTail: 
     }
 }
 /**
+ * Gets a number between the two values.
+ * 
+ * @param {number} min minimum value
+ * @param {number} max maximum value
+ */
+export function random(min:number, max:number) {
+    return Math.random() * (max - min) + min;
+}
+  
+/**
  * Gets a user's staff role based on their current roles in a guild.
  * @param {string} userID
  * @param {Guild} guild
