@@ -1,8 +1,10 @@
 import { PNFXCommand } from "./Command";
+import { Characters } from "./commands/characters";
 // Import Commands
 import { Mod } from "./commands/mod";
 import { Openmodel } from "./commands/openmodel";
 import { Ping } from "./commands/ping";
+import { Roll } from "./commands/roll";
 
 const Commands: PNFXCommand[] = []; 
 
@@ -16,11 +18,11 @@ const Commands: PNFXCommand[] = [];
             }
 
             if(true){ 
-                Commands.push(new Openmodel())
+                Commands.push(new Characters())
             }
 
             if(true){ 
-                Commands.push(new Mod())
+                Commands.push(new Roll())
             }
 
 

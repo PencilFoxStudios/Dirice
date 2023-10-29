@@ -1,7 +1,10 @@
-import { Database, Json } from 'src/database.types'
+import { Database, Json } from '../database.types'
 import { Roll, RollResult } from './Roll';
-import { DiriceDBClient } from '../api/DiriceDBClient';
-import { DiriceError } from '../helpers/DiriceError';
+import {DiriceDBClient} from '../api/DiriceDBClient';
+import { DiriceError } from '../errors/DiriceError';
+import { OfflineRoll } from './OfflineRoll';
+import { CharacterNoStatError } from '../errors/CharacterNoStatError';
+import { Campaign } from './Campaign';
 export interface RawCharacterStat {
     roll_id: number,
     roll_modifier: number,
@@ -11,16 +14,53 @@ export interface CharacterStat {
     roll_modifier: number,
     roll_name: string,
 }
-const DiriceClient = new DiriceDBClient()
+
 export class Character {
     info: Database["public"]["Tables"]["characters"]["Row"];
+    client:DiriceDBClient = new DiriceDBClient();
+    private stats?:CharacterStat[];
+    private linkedCampaign:Campaign|null;
     constructor(info: Database["public"]["Tables"]["characters"]["Row"]) {
         this.info = info;
+        this.linkedCampaign = null;
     }
-    async getStats(): Promise<CharacterStat[]> {
+    getID(): Database["public"]["Tables"]["characters"]["Row"]["id"] {
+        return this.info.id;
+    }
+    getName(): Database["public"]["Tables"]["characters"]["Row"]["name"] {
+        return this.info.name;
+    }
+    getPhotoURL(): Database["public"]["Tables"]["characters"]["Row"]["photo_url"] {
+        return this.info.photo_url;
+    }
+    getCampaign(): Campaign {
+        if(!this.linkedCampaign){
+            throw new DiriceError("You must fetch this character's linked campaign first!")
+        }
+        return this.linkedCampaign;
+    }
+    async fetch(): Promise<void> {
+        this.info = (await this.client.characters({id: this.info.id }).get())[0].info;
+    }
+    async fetchCampaign(): Promise<Character> {
+        await this.fetch();
+        if(!this.info.campaign_id){
+            this.linkedCampaign = null;
+        }else{
+            const Camps:Campaign[] = await this.client.campaigns({ id: this.info.campaign_id }).get();
+            if(Camps.length !== 1){
+                throw new DiriceError("Fetch character's campaign returned multiple or none!")
+            }
+            this.linkedCampaign = Camps[0];
+        }
+        return this;
+        
+    }
+    async fetchStats(): Promise<Character> {
+        await this.fetch();
         const stats: CharacterStat[] = [];
         for (const stat of ((this.info.stats as unknown[]) as RawCharacterStat[]).values()) {
-            const Roll = (await DiriceClient.roll({ id: stat["roll_id"] }).get())[0];
+            const Roll = (await this.client.roll({ id: stat["roll_id"] }).get())[0];
             Roll.setBonus(stat["roll_modifier"]);
             stats.push({
                 roll: Roll,
@@ -28,15 +68,34 @@ export class Character {
                 roll_name: Roll.info.roll_name
             })
         }
-        return stats;
+        this.stats = stats;
+        return this;
     }
-    async rollForStat(stat:Database["public"]["Tables"]["rolls"]["Row"]["roll_name"]):Promise<RollResult>{
-        const characterStats = await this.getStats();
+    getStats(): CharacterStat[] {
+        if(!this.stats){
+            throw new DiriceError("You must fetch this character's stats first!")
+        }
+        return this.stats;
+    }
+    roll(amount:number=1, min:number=1, max:number=20, bonus:number=0): RollResult[] {
+        const RollInQuestion = new OfflineRoll(amount, min, max, bonus);
+        return RollInQuestion.makeRolls();
+    }
+    rollForStat(stat:Database["public"]["Tables"]["rolls"]["Row"]["roll_name"], amount?:number, max?:number, bonus?:number):RollResult[]{
+        if(!this.stats){
+            throw new DiriceError("You must fetch this character's stats first!")
+        }
+        const characterStats = this.stats;
         const rollInQuestion = (characterStats).find((compStat:CharacterStat) => compStat.roll_name == stat);
         if(!rollInQuestion){
-            throw new DiriceError("Roll not found for stat " + stat);
+            throw new CharacterNoStatError(this, stat);
         }
-        return rollInQuestion.roll.makeRolls()[0];
+        const Roll = rollInQuestion.roll;
+        if(bonus) Roll.setBonus(bonus);
+        if(amount) Roll.setDiceAmount(amount);
+        if(max) Roll.setDiceMax(max);
+
+        return Roll.makeRolls();
     }
 
 

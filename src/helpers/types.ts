@@ -23,8 +23,12 @@ export const PNFXBotError = {
     PRETTY: "**This command is not configured for this method of use.**\nIf you believe this is an error, please contact the developers.",
     RAW: "Unconfigured command usage."
   },
+  "STAT_NOT_FOUND": {
+    PRETTY: "**The specified stat could not be found on the character.**",
+    RAW: "Stat not found."
+  },
   "CHARACTER_NOT_FOUND": {
-    PRETTY: "**The specified character could not be found.**\nDo you have access to it?",
+    PRETTY: "**The specified character could not be found.**\nDo you have permission to manage/roll for it?",
     RAW: "Character not found."
   },
   "USER_NOT_FOUND": {

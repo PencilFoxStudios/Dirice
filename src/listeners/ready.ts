@@ -1,7 +1,7 @@
 import { ApplicationCommandData, ApplicationCommandDataResolvable, ApplicationCommandOptionData, ApplicationCommandType, ChatInputApplicationCommandData, Client, CommandOptionDataTypeResolvable, MessageApplicationCommandData, RESTPostAPIApplicationCommandsJSONBody, RESTPostAPIChatInputApplicationCommandsJSONBody, SlashCommandBuilder, StringMappedInteractionTypes, UserApplicationCommandData } from "discord.js";
 import { Commands } from "../Commands";
 import { EraserTailClient } from "@pencilfoxstudios/erasertail";
-import { PNFXCommand } from "src/Command";
+import { PNFXCommand } from "../Command";
 export default (client: Client, EraserTail: EraserTailClient): void => {
     client.on("ready", async () => {
         if (!client.user || !client.application) {

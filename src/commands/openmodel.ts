@@ -1,6 +1,6 @@
 import { EraserTailClient } from "@pencilfoxstudios/erasertail";
 import { CommandInteraction, Client, SlashCommandBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, ModalBuilder, Interaction, ChatInputCommandInteraction, UserContextMenuCommandInteraction, MessageContextMenuCommandInteraction, Message } from "discord.js";
-import { PNFXCommandSupportString } from "src/helpers/types";
+import { PNFXCommandSupportString } from "../helpers/types";
 import { PNFXCommand } from "../Command";
 import * as PNFXEmbeds from "../helpers/Embeds";
 import * as PNFXTypes from "../helpers/types";

@@ -1,6 +1,7 @@
 import { EraserTailClient } from "@pencilfoxstudios/erasertail";
 import { CommandInteraction, Client, SlashCommandBuilder, ContextMenuCommandBuilder, ApplicationCommandType } from "discord.js";
 import * as PNFXTypes from './helpers/types'
+import { loading } from "./helpers/Embeds";
 export class PNFXCommand {
     readonly name: string;
     readonly description: string;
@@ -38,7 +39,7 @@ export class PNFXCommand {
         }
     }
     async run(client: Client, interaction: CommandInteraction, EraserTail: EraserTailClient) {
-        await interaction.deferReply({ ephemeral: this.secret })
+        await interaction.reply({ ephemeral: this.secret, embeds: [loading()] })
         switch (interaction.commandType) { // Check the command's type.
             case ApplicationCommandType.ChatInput:
                 // Command is a slash command!

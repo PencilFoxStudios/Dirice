@@ -1,6 +1,6 @@
 import { EraserTailClient } from "@pencilfoxstudios/erasertail";
 import { CommandInteraction, Client, SlashCommandBuilder } from "discord.js";
-import { PNFXCommandSupportString } from "src/helpers/types";
+import { PNFXCommandSupportString } from "../helpers/types";
 import { PNFXCommand } from "../Command";
 import * as PNFXEmbeds from "../helpers/Embeds"
 import PNFXMenu from "../helpers/Menu"
@@ -20,7 +20,7 @@ export class Ping extends PNFXCommand {
     __RunSlashCommand: Function = async (client: Client, interaction: CommandInteraction, EraserTail: EraserTailClient) => {
         await interaction.editReply(
             {
-                embeds: [PNFXEmbeds.user(interaction.user), PNFXEmbeds.success("Pong!")]
+                embeds: [ PNFXEmbeds.success("Pong!")]
             }
         )
     };

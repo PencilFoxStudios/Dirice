@@ -1,13 +1,14 @@
 import { EraserTailClient } from "@pencilfoxstudios/erasertail";
 import { CommandInteraction, Client, SlashCommandBuilder, MessagePayload, MessagePayloadOption, ButtonStyle, SlashCommandUserOption, GuildMember, User, Guild, SlashCommandSubcommandBuilder, SlashCommandStringOption, ChatInputCommandInteraction, UserContextMenuCommandInteraction, MessageContextMenuCommandInteraction, SlashCommandIntegerOption } from "discord.js";
-import { PNFXCommandSupportString } from "src/helpers/types";
+import { PNFXCommandSupportString } from "../helpers/types";
 import { PNFXCommand } from "../Command";
 import * as PNFXHelpers from "../helpers/functions"
 import * as PNFXEmbeds from "../helpers/Embeds"
 import * as PNFXTypes from "../helpers/types";
 import PNFXMenu from "../helpers/Menu";
-import { DiriceDBClient } from "src/api/DiriceDBClient";
-const DiriceClient = new DiriceDBClient()
+import { DiriceDBClient } from "../api/DiriceDBClient";
+import { Character } from "../objects/Character";
+
 export class Characters extends PNFXCommand {
     constructor() {
         super(
@@ -24,14 +25,45 @@ export class Characters extends PNFXCommand {
             .addSubcommand((subcommand: SlashCommandSubcommandBuilder) =>
                 subcommand
                     .setName('switch')
-                    .setDescription("Switch to this character for any rolls.")
+                    .setDescription("Switch to this character for any rolls (don't specify to reset).")
                     .addIntegerOption((option: SlashCommandIntegerOption) =>
                         option
-                            .setName("character")
+                            .setName("roll-character")
                             .setDescription("The character you would like to switch to.")
-                            .setRequired(true)
+                            .setRequired(false)
                             .setAutocomplete(true)
                     )
+            )
+            .addSubcommand((subcommand: SlashCommandSubcommandBuilder) =>
+                subcommand
+                    .setName('create')
+                    .setDescription("Create a character. These can all be changed later!")
+                    .addStringOption((option: SlashCommandStringOption) =>
+                    option
+                        .setName("name")
+                        .setDescription("The character's full name.")
+                        .setRequired(true)
+                    )
+                    .addStringOption((option: SlashCommandStringOption) =>
+                    option
+                        .setName("description")
+                        .setDescription("The character's description.")
+                        .setRequired(false)
+                    )
+                    .addStringOption((option: SlashCommandStringOption) =>
+                    option
+                        .setName("quote")
+                        .setDescription("A quote that the character said/would say.")
+                        .setRequired(false)
+                    )
+                    .addIntegerOption((option: SlashCommandIntegerOption) =>
+                    option
+                        .setName("link-campaign")
+                        .setDescription("Link this character, and its stats, to an existing campaign.")
+                        .setRequired(false)
+                        .setAutocomplete(true)
+                    )
+
             )
             .addSubcommand((subcommand: SlashCommandSubcommandBuilder) =>
                 subcommand
@@ -39,44 +71,89 @@ export class Characters extends PNFXCommand {
                     .setDescription("View the information of this character.")
                     .addIntegerOption((option: SlashCommandIntegerOption) =>
                         option
-                            .setName("character")
+                            .setName("manage-character")
                             .setDescription("The character you would like to view.")
                             .setRequired(true)
                             .setAutocomplete(true)
                     )
             )
+
     }
 
     __RunSlashCommand: Function = async (client: Client, interaction: ChatInputCommandInteraction, EraserTail: EraserTailClient) => {
-        const character = interaction.options.getInteger("character")
-        if(!character){
+        const DiriceClient = new DiriceDBClient(interaction.user.id)
+        let characterID: number | null = null;
+        let charactersInDB: Character[] = [];
+        const Player = (await DiriceClient.me());
+        switch (interaction.options.getSubcommand()) {
+            case "create":
+                const newChar = await Player.createCharacter({
+                    name: interaction.options.getString("name")??undefined,
+                    description: interaction.options.getString("description")??undefined,
+                    quote: interaction.options.getString("quote")??undefined,
+                    campaign_id: interaction.options.getInteger("link-campaign")??undefined,
+                    owner_id: interaction.user.id
+                })
+                await interaction.editReply({
+                    embeds: [PNFXEmbeds.success(`Character ${newChar.getName()} has been created!`)]
+                });
+                return;
+            case "switch":
+                characterID = interaction.options.getInteger("roll-character")
+                if (characterID == null) {
+                    await Player.updateSettings({ selected_character: null })
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.success(`You will now roll generically.`)]
+                    });
+                    return;
+                }
+                charactersInDB = await Player.getRollableCharacters()
+                
+                break;
+            case "info":
+                characterID = interaction.options.getInteger("manage-character")
+                charactersInDB = await Player.getManageableCharacters()
+                break;
+        }
+
+        if (!characterID) {
             await interaction.editReply({
                 embeds: [PNFXEmbeds.error("GENERAL_COMMAND_ERROR")]
             });
             return
         }
-        let charactersInDB = await DiriceClient.characters({owner_id: interaction.user.id}).get()
-        if(charactersInDB.length == 0){
+        charactersInDB = charactersInDB.filter((val: Character) => val.getID() == characterID)
+        if (charactersInDB.length == 0) {
             await interaction.editReply({
                 embeds: [PNFXEmbeds.error("CHARACTER_NOT_FOUND")]
             });
             return
         }
-        if(charactersInDB.length > 1){
+
+        if (charactersInDB.length > 1) {
             await interaction.editReply({
                 embeds: [PNFXEmbeds.error("UNK", "charactersInDB.length > 1")]
             });
-            EraserTail.log("Warn", "charactersInDB.length > 1 for character ID " + character)
+            EraserTail.log("Warn", "charactersInDB.length > 1 for character ID " + characterID)
             return
         }
-        switch(interaction.options.getSubcommand()){
+        const character = charactersInDB[0];
+
+        switch (interaction.options.getSubcommand()) {
             case "switch":
+                await Player.updateSettings({ selected_character: character.getID() })
+                await interaction.editReply({
+                    embeds: [PNFXEmbeds.success(`You will now roll as ${character.getName()}.`)]
+                });
                 break;
             case "info":
+                await interaction.editReply({
+                    embeds: [PNFXEmbeds.error("NOT_CONFIGURED", "to be implemented...")]
+                });
                 break;
         }
 
-        
+
     }
 
 };
