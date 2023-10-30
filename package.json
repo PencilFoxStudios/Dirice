@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node src/Bot.ts"
+    "dev": "tsx watch src/Bot.ts",
+    "start": "node dist/Bot.js",
+    "build": "npx tsup src/Bot.ts --minify"
   },
   "repository": {
     "type": "git",
