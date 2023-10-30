@@ -8,7 +8,13 @@ export class WebServer {
     private EraserTail:EraserTailClient;
     private Dirice:DiriceDBClient;
     private readonly server = fastify(
-        {logger: true}
+        {  logger: {
+            serializers: {
+              req: function (req) {
+                return { url: req.url }
+              }
+            }
+          }}
     );
     private readonly PORT: number = 8080;
     constructor(client: Client, Dirice:DiriceDBClient, EraserTail:EraserTailClient) {
