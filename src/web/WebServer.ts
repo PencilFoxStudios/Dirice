@@ -40,7 +40,10 @@ export class WebServer {
     }
     async start() {
         try {
-            await this.server.listen({ port: this.PORT })
+            this.EraserTail.log("Debug", `process.env.PORT => ${process.env.PORT}`)
+            const port = process.env.PORT?parseInt(process.env.PORT):this.PORT;
+            this.EraserTail.log("Debug", `Listening on ${port}`)
+            await this.server.listen({ port: port })
         } catch (err) {
             this.server.log.error(err)
         }
