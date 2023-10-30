@@ -2,9 +2,16 @@ import { EraserTailClient } from "@pencilfoxstudios/erasertail";
 import { Client } from "discord.js";
 import fastify from 'fastify'
 import { DiriceDBClient } from "src/api/DiriceDBClient";
+import net from 'net'; 
+
+
+
+
+
 
 export class WebServer {
     private Discord: Client;
+    private TCPServer = net.createServer(); 
     private EraserTail:EraserTailClient;
     private Dirice:DiriceDBClient;
 
@@ -17,7 +24,7 @@ export class WebServer {
             }
           }}
     );
-
+    private readonly HOST: string = "127.0.0.1";
     private readonly PORT: number = 8080;
     constructor(client: Client, Dirice:DiriceDBClient, EraserTail:EraserTailClient) {
         this.Discord = client;
@@ -39,6 +46,17 @@ export class WebServer {
         this.server.get('/health', async function handler(request, reply) {
             return "I'm feeling pretty good!"
         })
+         
+        this.TCPServer.listen(this.PORT, this.HOST, () => { 
+            this.EraserTail.log("Debug", `TCP Client listening on ${this.HOST}:${this.PORT}`); 
+        }); 
+        this.TCPServer.on('connection', (socket) => { 
+            var clientAddress = `${socket.remoteAddress}:${socket.remotePort}`; 
+            this.EraserTail.log("Debug", `New client connected: ${clientAddress}`);
+            socket.write("HELLO YES I AM ALIVE. PLEASE DO NOT CRASH. THANKS.")
+            this.EraserTail.log("Debug", `Sent health message.`);
+        }); 
+        
 
     }
     async start() {
