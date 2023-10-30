@@ -7,6 +7,7 @@ export class WebServer {
     private Discord: Client;
     private EraserTail:EraserTailClient;
     private Dirice:DiriceDBClient;
+
     private readonly server = fastify(
         {  logger: {
             serializers: {
@@ -16,6 +17,7 @@ export class WebServer {
             }
           }}
     );
+
     private readonly PORT: number = 8080;
     constructor(client: Client, Dirice:DiriceDBClient, EraserTail:EraserTailClient) {
         this.Discord = client;
@@ -37,6 +39,11 @@ export class WebServer {
             ET.log("Debug", "/dev was rung!")
             return "Yeah goodie."
         })
+
+        this.server.get('/health', async function handler(request, reply) {
+            return "I'm feeling pretty good!"
+        })
+
     }
     async start() {
         try {
