@@ -16,7 +16,6 @@ export default async function handleModal(client: Client, EraserTail: EraserTail
                 return
             };
             let originalMessage = interaction.message
-            console.log(originalMessage.components)
             const newMenu = new PNFXMenu("#c5f9ff", false, originalMessage);
             const reasonSelected = interaction.fields.getTextInputValue('reason');
             newMenu.editEmbed(3, (embed: EmbedBuilder) => {

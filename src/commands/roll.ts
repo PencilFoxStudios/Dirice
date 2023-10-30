@@ -8,6 +8,7 @@ import { DiriceDBClient } from "../api/DiriceDBClient";
 import { Character } from "../objects/Character";
 import { OfflineRoll } from "../objects/OfflineRoll";
 import { CharacterNoStatError } from "../errors/CharacterNoStatError";
+import { modifierToString } from "../helpers/functions";
 export class Roll extends PNFXCommand {
     constructor() {
         super(
@@ -32,21 +33,21 @@ export class Roll extends PNFXCommand {
                     .setName("number-of-dice")
                     .setDescription("The number of dice that you would like to roll.")
                     .setMinValue(1)
-                    .setMaxValue(150)
+                    .setMaxValue(5000)
                     .setRequired(false))
             .addIntegerOption((option: SlashCommandIntegerOption) =>
                 option
                     .setName("sides-of-dice")
                     .setDescription("The number of sides you want the dice to have.")
                     .setMinValue(1)
-                    .setMaxValue(1000)
+                    .setMaxValue(10000)
                     .setRequired(false))
             .addIntegerOption((option: SlashCommandIntegerOption) =>
                 option
                     .setName("bonus")
                     .setDescription("Adds a bonus to the roll(s).")
                     .setMinValue(1)
-                    .setMaxValue(9999)
+                    .setMaxValue(10000)
                     .setRequired(false))
 
 
@@ -62,7 +63,7 @@ export class Roll extends PNFXCommand {
         }
         const PlayerSettings = Player.getSettings()
         if (PlayerSettings.selected_character == null) {
-            const Roll = new OfflineRoll(chosen.numberOfDice, 1, chosen.sidesOfDice, chosen.bonus)
+            const Roll = new OfflineRoll(chosen.numberOfDice, chosen.sidesOfDice, chosen.bonus)
             const Rolls = Roll.makeRolls();
 
             await interaction.editReply({
@@ -84,9 +85,26 @@ export class Roll extends PNFXCommand {
                     }else{
                         Rolls = CurrentCharacter.roll(chosen.numberOfDice, chosen.sidesOfDice, chosen.bonus)
                     }
-                    
+                    const userEmbed = PNFXEmbeds.user(interaction.user).setAuthor({ iconURL: CurrentCharacter.getPhotoURL(), name: `${CurrentCharacter.getName()} rolls ${chosen.stat??`${((chosen.numberOfDice??1) == 1)?"a":chosen.numberOfDice} ${chosen.sidesOfDice??20}-sided di${chosen.numberOfDice??1>1?"ce":"e"}`}!` });
+                    if(chosen.stat !== undefined){
+                        // Include any and all manual roll modifiers in the userEmbed
+                        if(chosen.bonus || chosen.numberOfDice || chosen.sidesOfDice){
+                            userEmbed.setDescription(`The following manual override(s) were applied to this roll:`)
+                        }
+                        if(chosen.bonus !== undefined){
+                            userEmbed.addFields({ name: "Bonus", value: modifierToString(chosen.bonus), inline: true })
+                        }
+                        if(chosen.numberOfDice !== undefined){
+                            userEmbed.addFields({ name: "Number of Dice", value: chosen.numberOfDice.toString(), inline: true })
+                        }
+                        if(chosen.sidesOfDice !== undefined){
+                            userEmbed.addFields({ name: "Sides of Dice", value: chosen.sidesOfDice.toString(), inline: true })
+                        }
+
+                    }
+
                     await interaction.editReply({
-                        embeds: [PNFXEmbeds.user(interaction.user).setAuthor({ iconURL: CurrentCharacter.getPhotoURL(), name: `${CurrentCharacter.getName()} rolls ${chosen.stat??`${((chosen.numberOfDice??1) == 1)?"a":chosen.numberOfDice} ${chosen.sidesOfDice??20}-sided di${chosen.numberOfDice??1>1?"ce":"e"}`}!` }), PNFXEmbeds.rollingResult(Rolls)]
+                        embeds: [userEmbed, PNFXEmbeds.rollingResult(Rolls)]
                     });
                     return
                 } catch (e) {

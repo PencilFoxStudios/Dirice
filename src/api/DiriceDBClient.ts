@@ -80,6 +80,19 @@ export class DiriceDBClient {
                 }
             },
             /**
+             * Creates campaigns.
+             */
+            create: async function (){
+                if(!params){
+                    throw new DiriceError("Must specify parameters to create campaign!")
+                }
+                let CAMPAIGN_CREATION = supabase.from("campaigns").insert(params as CAMPAIGNS_TABLE["Insert"]);
+                const { data, error } = (await CAMPAIGN_CREATION);
+                if(error){
+                    throw new DiriceError(error.message)
+                }
+            },
+            /**
              * Syncs a campaign's stats with a character's stats, if they do not already have that stat present in their "stats" JSON.
              */
             syncStatChangesToCharacters: async function (camp:Campaign){

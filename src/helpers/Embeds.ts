@@ -2,6 +2,7 @@ import { ColorResolvable, EmbedBuilder, EmbedField, User } from 'discord.js'
 import moment from 'moment'
 import * as PNFXTypes from "./types"
 import {RollResult } from "../objects/Roll"
+import { specialNumbers } from './functions'
 export function error(code: PNFXTypes.PNFXBotErrorCode = "UNK", moreInfo?: string): EmbedBuilder {
     const embed = new EmbedBuilder()
         .setColor(0xda4453)
@@ -65,12 +66,12 @@ export function rollingResult (rolls:RollResult[]){
         if(ModifierInfo){
             embed.setDescription(`### 🎲 [${oneRoll.NaturalRoll}]${ModifierInfo}`)
         }else{
-            embed.setDescription(`# 🎲 [${oneRoll.NaturalRoll}]`)
+            embed.setDescription(`# 🎲 [${oneRoll.NaturalRoll}] ${specialNumbers(oneRoll.NaturalRoll, oneRoll.NaturalMaximumPossible)}`)
         }
         
         return embed;
     }
-    console.log(rolls)
+
     let specials: {nMinimum?:number, nMaximum?:number, minimum?:number,maximum?:number, nTotal:number , total:number, modifier?:number} = {
         nMinimum: undefined,
         nMaximum: undefined,
@@ -115,10 +116,10 @@ export function rollingResult (rolls:RollResult[]){
         const roll = rolls[i];
         let modifierInfo = "";
         if(roll.Modifier !== 0){
-            modifierInfo = ((roll.Modifier < 0)?" - " + Math.abs(roll.Modifier):" + " + Math.abs(roll.Modifier)) + ` => **${roll.FinalRoll}**`;
+            modifierInfo = ((roll.Modifier < 0)?" - " + Math.abs(roll.Modifier):" + " + Math.abs(roll.Modifier)) + ` => **${roll.FinalRoll}** `;
         }
         if(i < 20){
-            rollStrings.push(`**#${i+1}** 🎲 [${roll.NaturalRoll}]${modifierInfo}`)
+            rollStrings.push(`**#${i+1}** 🎲 [${roll.NaturalRoll}]${modifierInfo} ${specialNumbers(roll.NaturalRoll, roll.NaturalMaximumPossible)}`)
         }
         
     }
@@ -128,17 +129,17 @@ export function rollingResult (rolls:RollResult[]){
         embed.setFields([
             {
                 name: "Natural Minimum",
-                value: `${specials.nMinimum}`,
+                value: `${specialNumbers(specials.nMinimum!, rolls[0].NaturalMaximumPossible)}${specials.nMinimum}`,
                 inline: true
             },
             {
                 name: "Natural Maximum",
-                value: `${specials.nMaximum}`,
+                value: `${specialNumbers(specials.nMaximum!, rolls[0].NaturalMaximumPossible)}${specials.nMinimum == 1?"⚠":""}${specials.nMaximum}`,
                 inline: true
             },
             {
                 name: "Natural Average",
-                value: `${Math.floor(specials.nTotal/rolls.length)}`,
+                value: `${specialNumbers(specials.nTotal!, rolls[0].NaturalMaximumPossible)}${Math.floor(specials.nTotal/rolls.length)}`,
                 inline: true
             },
         ])
@@ -146,17 +147,17 @@ export function rollingResult (rolls:RollResult[]){
             embed.addFields([
             {
                 name: "Final Minimum",
-                value: `${specials.minimum}`,
+                value: `${specialNumbers(specials.minimum!, rolls[0].NaturalMaximumPossible)}${specials.minimum}`,
                 inline: true
             },
             {
                 name: "Final Maximum",
-                value: `${specials.maximum}`,
+                value: `${specialNumbers(specials.maximum!, rolls[0].NaturalMaximumPossible)}${specials.maximum}`,
                 inline: true
             },
             {
                 name: "Final Average",
-                value: `${Math.floor(specials.total/rolls.length)}`,
+                value: `${specialNumbers(Math.floor(specials.total/rolls.length), rolls[0].NaturalMaximumPossible)}${Math.floor(specials.total/rolls.length)}`,
                 inline: true
             }
         ])

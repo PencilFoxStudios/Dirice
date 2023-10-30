@@ -2,6 +2,7 @@ import { DiriceDBClient } from '../api/DiriceDBClient';
 import { Database } from '../database.types'
 import { random } from '../helpers/functions';
 export interface RollResult {
+    NaturalMaximumPossible: number,
     NaturalRoll: number,
     Modifier: number,
     FinalRoll: number
@@ -27,6 +28,7 @@ export class Roll {
         for(let i = 0; i < this.info.dice_amt; i++){
             const result = random(1, this.info.dice_max);
             rolls.push({
+                NaturalMaximumPossible: this.info.dice_max,
                 NaturalRoll: result,
                 Modifier: this.bonus,
                 FinalRoll: result + this.bonus

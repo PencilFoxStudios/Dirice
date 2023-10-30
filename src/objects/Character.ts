@@ -33,6 +33,12 @@ export class Character {
     getPhotoURL(): Database["public"]["Tables"]["characters"]["Row"]["photo_url"] {
         return this.info.photo_url;
     }
+    getCanRollAs(): Database["public"]["Tables"]["characters"]["Row"]["can_roll_as"] {
+        return this.info.can_roll_as;
+    }
+    getCanManage(): Database["public"]["Tables"]["characters"]["Row"]["can_manage"] {
+        return this.info.can_manage;
+    }
     getCampaign(): Campaign {
         if(!this.linkedCampaign){
             throw new DiriceError("You must fetch this character's linked campaign first!")
@@ -86,8 +92,8 @@ export class Character {
         }
         return this.stats;
     }
-    roll(amount:number=1, min:number=1, max:number=20, bonus:number=0): RollResult[] {
-        const RollInQuestion = new OfflineRoll(amount, min, max, bonus);
+    roll(amount:number=1, max:number=20, bonus:number=0): RollResult[] {
+        const RollInQuestion = new OfflineRoll(amount, max, bonus);
         return RollInQuestion.makeRolls();
     }
     rollForStat(stat:Database["public"]["Tables"]["rolls"]["Row"]["roll_name"], amount?:number, max?:number, bonus?:number):RollResult[]{

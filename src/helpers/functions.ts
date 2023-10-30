@@ -70,6 +70,23 @@ export async function getUserInServer(userID: string, guild: Guild, EraserTail: 
         return null
     }
 }
+
+/**
+ * Returns a special emoji based on the result and the max possible.
+ * @param result 
+ * @param maxPossible 
+ * @returns 
+ */
+export function specialNumbers(result:number, maxPossible:number){
+    if(result == maxPossible){
+        return "💥"
+    }else if(result == 1){
+        return "⚠️"
+    }else{
+        return ""
+    }
+}
+
 /**
  * Removes a specified element from an array.
  *

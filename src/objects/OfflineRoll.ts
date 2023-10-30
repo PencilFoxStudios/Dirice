@@ -4,12 +4,10 @@ import { RollResult } from './Roll';
 
 export class OfflineRoll {
     private amount:number;
-    private min:number;
     private max:number;
     private bonus:number;
-    constructor(amount:number=1, min:number=1, max:number=20, bonus:number=0){
+    constructor(amount:number=1, max:number=20, bonus:number=0){
         this.amount = amount;
-        this.min = min;
         this.max = max;
         this.bonus = bonus;
     }
@@ -18,6 +16,7 @@ export class OfflineRoll {
         for(let i = 0; i < this.amount; i++){
             const result = random(1, this.max);
             rolls.push({
+                NaturalMaximumPossible: this.max,
                 NaturalRoll: result,
                 Modifier: this.bonus,
                 FinalRoll: result + this.bonus
