@@ -53,6 +53,8 @@ export class WebServer {
         this.TCPServer.on('connection', (socket) => { 
             var clientAddress = `${socket.remoteAddress}:${socket.remotePort}`; 
             this.EraserTail.log("Debug", `New client connected: ${clientAddress}`);
+            socket.write("HELLO YES I AM ALIVE. PLEASE DO NOT CRASH. THANKS.")
+            this.EraserTail.log("Debug", `Sent health message.`);
         }); 
         
 
