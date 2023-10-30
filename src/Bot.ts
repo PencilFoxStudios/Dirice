@@ -2,7 +2,9 @@ import { Client, IntentsBitField } from "discord.js";
 import { EraserTailClient } from "@pencilfoxstudios/erasertail"
 import ready from "./listeners/ready";
 import interactionCreate from "./listeners/interactionCreate";
+import { WebServer } from "./web/WebServer";
 import 'dotenv/config'
+import { DiriceDBClient } from "./api/DiriceDBClient";
 // test thing for dev branch
 const EraserTail = new EraserTailClient({
   APPLICATION_NAME: "DIRICE" + process.env.env?`_${process.env.env!.toUpperCase()}`:"",
@@ -32,3 +34,11 @@ ready(client, EraserTail);
 interactionCreate(client, EraserTail);
 
 client.login(process.env.DISCORD_BOT_TOKEN);
+
+const web = new WebServer(client, new DiriceDBClient(), EraserTail);
+
+EraserTail.log("Info", "Web server is starting....");
+web.start().then(() => EraserTail.log("Info", "Web server is up!"));
+
+
+
