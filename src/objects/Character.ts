@@ -59,16 +59,25 @@ export class Character {
     async fetchStats(): Promise<Character> {
         await this.fetch();
         const stats: CharacterStat[] = [];
+        const validStats: RawCharacterStat[] = [];
         for (const stat of ((this.info.stats as unknown[]) as RawCharacterStat[]).values()) {
-            const Roll = (await this.client.roll({ id: stat["roll_id"] }).get())[0];
-            Roll.setBonus(stat["roll_modifier"]);
-            stats.push({
-                roll: Roll,
+            let R = (await this.client.roll({ id: stat["roll_id"] }).get())[0];
+            if(!R){
+               continue;
+            }
+            R.setBonus(stat["roll_modifier"]);
+            validStats.push({
+                roll_id: stat["roll_id"],
                 roll_modifier: stat["roll_modifier"],
-                roll_name: Roll.info.roll_name
+            })
+            stats.push({
+                roll: R,
+                roll_modifier: stat["roll_modifier"],
+                roll_name: R.info.roll_name
             })
         }
         this.stats = stats;
+        await this.client.characters({ id: this.info.id, stats: validStats as any  }).update();
         return this;
     }
     getStats(): CharacterStat[] {

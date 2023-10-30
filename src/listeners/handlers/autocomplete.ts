@@ -6,6 +6,7 @@ import * as PNFXEmbeds from "../../helpers/Embeds"
 import { DiriceDBClient } from "../../api/DiriceDBClient";
 import { Character } from "../../objects/Character";
 import { modifierToString } from "../../helpers/functions";
+import { Campaign } from "../../objects/Campaign";
 export default async function handleAutocomplete(client: Client, EraserTail: EraserTailClient, interaction: AutocompleteInteraction, pnfxMember: PNFXMember): Promise<void> {
     const DiriceClient = new DiriceDBClient(interaction.user.id);
     const Player = (await DiriceClient.me());
@@ -57,6 +58,17 @@ export default async function handleAutocomplete(client: Client, EraserTail: Era
             }
             
             await interaction.respond(stats)
+            break;
+        case "link-campaign":
+            const campaigns:ApplicationCommandOptionChoiceData[] = [];
+            const Campaigns:Campaign[] = await DiriceClient.campaigns().get(focusedValue.value);
+            for (const campaign of Campaigns){
+                campaigns.push({
+                    name: campaign.getName(),
+                    value: campaign.getID()
+                })
+            }
+            await interaction.respond(campaigns)
             break;
         default:
             EraserTail.log("Warn", "This bot isn't configured to handle the autocomplete " + focusedValue + "!")

@@ -76,8 +76,8 @@ export class Roll extends PNFXCommand {
                     let Rolls;
                     await CurrentCharacter.fetchStats();
                     await CurrentCharacter.fetchCampaign()
-
                     await CurrentCharacter.getCampaign().syncStatsWithCharacters()
+                
 
                     if(chosen.stat){
                         Rolls = CurrentCharacter.rollForStat(chosen.stat, chosen.numberOfDice, chosen.sidesOfDice, chosen.bonus);

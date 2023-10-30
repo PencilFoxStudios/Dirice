@@ -38,6 +38,9 @@ export class Campaign {
     getID(): Database["public"]["Tables"]["campaigns"]["Row"]["id"] {
         return this.info.id;
     }
+    getName(): Database["public"]["Tables"]["campaigns"]["Row"]["name"] {
+        return this.info.name;
+    }
     async syncStatsWithCharacters(){
         await this.client.campaigns(this.info).syncStatChangesToCharacters(this)
     }

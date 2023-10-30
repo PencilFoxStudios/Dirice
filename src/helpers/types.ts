@@ -31,6 +31,10 @@ export const PNFXBotError = {
     PRETTY: "**The specified character could not be found.**\nDo you have permission to manage/roll for it?",
     RAW: "Character not found."
   },
+  "CHARACTER_ALREADY_EXISTS": {
+    PRETTY: "**The character you're attempting to create appears to already exist in this campaign...**\nTry changing some details!",
+    RAW: "Character already exists."
+  },
   "USER_NOT_FOUND": {
     PRETTY: "**The specified user could not be found.**\nThey may have either left the server, my cache, or both!",
     RAW: "User not found."

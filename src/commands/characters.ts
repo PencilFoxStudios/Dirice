@@ -8,6 +8,7 @@ import * as PNFXTypes from "../helpers/types";
 import PNFXMenu from "../helpers/Menu";
 import { DiriceDBClient } from "../api/DiriceDBClient";
 import { Character } from "../objects/Character";
+import { CharacterAlreadyExistsError } from "../errors/CharacterAlreadyExistsError";
 
 export class Characters extends PNFXCommand {
     constructor() {
@@ -44,6 +45,13 @@ export class Characters extends PNFXCommand {
                         .setDescription("The character's full name.")
                         .setRequired(true)
                     )
+                    .addIntegerOption((option: SlashCommandIntegerOption) =>
+                    option
+                        .setName("link-campaign")
+                        .setDescription("Link this character, and its stat options, to an existing campaign.")
+                        .setRequired(true)
+                        .setAutocomplete(true)
+                    )
                     .addStringOption((option: SlashCommandStringOption) =>
                     option
                         .setName("description")
@@ -56,13 +64,7 @@ export class Characters extends PNFXCommand {
                         .setDescription("A quote that the character said/would say.")
                         .setRequired(false)
                     )
-                    .addIntegerOption((option: SlashCommandIntegerOption) =>
-                    option
-                        .setName("link-campaign")
-                        .setDescription("Link this character, and its stats, to an existing campaign.")
-                        .setRequired(false)
-                        .setAutocomplete(true)
-                    )
+
 
             )
             .addSubcommand((subcommand: SlashCommandSubcommandBuilder) =>
@@ -87,16 +89,29 @@ export class Characters extends PNFXCommand {
         const Player = (await DiriceClient.me());
         switch (interaction.options.getSubcommand()) {
             case "create":
-                const newChar = await Player.createCharacter({
-                    name: interaction.options.getString("name")??undefined,
-                    description: interaction.options.getString("description")??undefined,
-                    quote: interaction.options.getString("quote")??undefined,
-                    campaign_id: interaction.options.getInteger("link-campaign")??undefined,
-                    owner_id: interaction.user.id
-                })
-                await interaction.editReply({
-                    embeds: [PNFXEmbeds.success(`Character ${newChar.getName()} has been created!`)]
-                });
+                try {
+                    const newChar = await Player.createCharacter({
+                        name: interaction.options.getString("name")??undefined,
+                        description: interaction.options.getString("description")??undefined,
+                        quote: interaction.options.getString("quote")??undefined,
+                        campaign_id: interaction.options.getInteger("link-campaign")??undefined,
+                        owner_id: interaction.user.id
+                    })
+                    await newChar.fetchCampaign()
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.success(`Character ${newChar.getName()} has been created under ${newChar.getCampaign().getName()}!`)]
+                    });
+                    await newChar.getCampaign().syncStatsWithCharacters()
+                } catch (error) {
+                    if(error instanceof CharacterAlreadyExistsError){
+                        await interaction.editReply({
+                            embeds: [PNFXEmbeds.error("CHARACTER_ALREADY_EXISTS")]
+                        });
+                        return;
+                    }
+                    throw error;
+                }
+
                 return;
             case "switch":
                 characterID = interaction.options.getInteger("roll-character")

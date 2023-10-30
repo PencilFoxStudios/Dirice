@@ -11,13 +11,8 @@ import { Player } from '../objects/Player'
 import { EraserTailClient } from '@pencilfoxstudios/erasertail'
 import { removeElementFromArray } from '../helpers/functions'
 
-const supabase = createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_TOKEN!)
+export const supabase = createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_TOKEN!)
 
-export const CAMPAIGNS = supabase.from("campaigns")
-export const CHARACTERS = supabase.from("characters")
-export const ROLLS = supabase.from("rolls")
-export const STATUSES = supabase.from("statuses")
-export const PLAYERS = supabase.from("players")
 
 
 
@@ -42,7 +37,7 @@ export class DiriceDBClient {
             throw new DiriceError("You must authorize with a valid Discord ID before using me()!")
         }
         console.log(this.DiscordID)
-        let SETTINGS = PLAYERS.select("*").eq("user_id", this.DiscordID)
+        let SETTINGS = supabase.from("players").select("*").eq("user_id", this.DiscordID)
         const { data, error } = (await SETTINGS);
         if(!error){
             if(data.length == 0){
@@ -50,7 +45,7 @@ export class DiriceDBClient {
                     selected_character: null,
                     user_id: this.DiscordID
                 };
-                await PLAYERS.insert(newPlayer)
+                await supabase.from("players").insert(newPlayer)
                 return new Player(newPlayer)
             }
             return new Player(data[0])
@@ -64,13 +59,18 @@ export class DiriceDBClient {
             /**
              * Gets campaigns.
              */
-            get: async function (){
-                let CAMPAIGNS_SELECTION = CAMPAIGNS.select("*");
-                for (const [key, value] of Object.entries(params as object)){
-                    if(!value){
-                        continue;
+            get: async function (startsWith?:string){
+                let CAMPAIGNS_SELECTION = supabase.from("campaigns").select("*");
+                if(startsWith){
+                    CAMPAIGNS_SELECTION = CAMPAIGNS_SELECTION.or(`name.ilike.${startsWith}%`)
+                }
+                if(params){
+                    for (const [key, value] of Object.entries(params as object)){
+                        if(!value){
+                            continue;
+                        }
+                        CAMPAIGNS_SELECTION = CAMPAIGNS_SELECTION.eq(key, value)
                     }
-                    CAMPAIGNS_SELECTION = CAMPAIGNS_SELECTION.eq(key, value)
                 }
                 const { data, error } = (await CAMPAIGNS_SELECTION);
                 if(!error){
@@ -92,15 +92,15 @@ export class DiriceDBClient {
                   params = params as CAMPAIGNS_TABLE["Update"];
                   const campaignInQuestion = camp;
                 
-                  let STATS_MASS_LOOKUP = ROLLS.select("*").eq("campaign_id", campaignInQuestion.getID());
-                
-                  const statsLookup = (await STATS_MASS_LOOKUP);
+                  let STATS_MASS_LOOKUP = supabase.from("rolls").select("*").eq("campaign_id", campaignInQuestion.getID());
+                  const statsLookup = await STATS_MASS_LOOKUP;
+                  console.log("statsLookup", statsLookup)
                   if (statsLookup.error) {
                     throw new DiriceError(statsLookup.error.message);
                   }
                   const statsLookupData = statsLookup.data;
                   console.log("statsLookupData", statsLookupData)
-                  let CHARACTERS_MASS_LOOKUP = CHARACTERS.select("*").eq("campaign_id", campaignInQuestion.getID());
+                  let CHARACTERS_MASS_LOOKUP = supabase.from("characters").select("*").eq("campaign_id", campaignInQuestion.getID());
                 
                   const charactersLookup = (await CHARACTERS_MASS_LOOKUP);
                   if (charactersLookup.error) {
@@ -123,7 +123,7 @@ export class DiriceDBClient {
                     }
                     // console.log("[...characterOldStats, ...newStats]", [...characterOldStats, ...newStats])
                     // Update the character's stats with the new stats
-                    const SPECIFIC_CHARACTER_UPDATE = CHARACTERS.update({
+                    const SPECIFIC_CHARACTER_UPDATE = supabase.from("characters").update({
                       stats: [...characterOldStats, ...newStats],
                     }).eq('id', character.id);
                 
@@ -143,7 +143,7 @@ export class DiriceDBClient {
                 if(!params.id){
                     throw new DiriceError("ID of campaign must be provided when updating!")
                 }
-                let CAMPAIGN_UPDATE = CAMPAIGNS.update(params).eq("id", params.id);
+                let CAMPAIGN_UPDATE = supabase.from("campaigns").update(params).eq("id", params.id);
                 const { data, error } = (await CAMPAIGN_UPDATE);
                 if(error){
                     throw new DiriceError(error.message)
@@ -157,7 +157,7 @@ export class DiriceDBClient {
              * Gets characters.
              */
             get: async function (){
-                let CHARACTERS_SELECTION = CHARACTERS.select("*");
+                let CHARACTERS_SELECTION = supabase.from("characters").select("*");
                 for (const [key, value] of Object.entries(params as object)){
                     if(!value){
                         continue;
@@ -178,8 +178,22 @@ export class DiriceDBClient {
                 if(!params){
                     throw new DiriceError("Must specify parameters to create character!")
                 }
-                let CHARACTER_CREATION = CHARACTERS.insert(params as CHARACTERS_TABLE["Insert"]);
+                let CHARACTER_CREATION = supabase.from("characters").insert(params as CHARACTERS_TABLE["Insert"]);
                 const { data, error } = (await CHARACTER_CREATION);
+                if(error){
+                    throw new DiriceError(error.message)
+                }
+            },
+            /**
+             * Updates characters.
+            */
+            update: async function (){
+                params = params as CHARACTERS_TABLE["Update"]
+                if(!params.id){
+                    throw new DiriceError("ID of character must be provided when updating!")
+                }
+                let CAMPAIGN_UPDATE = supabase.from("characters").update(params).eq("id", params.id);
+                const { data, error } = (await CAMPAIGN_UPDATE);
                 if(error){
                     throw new DiriceError(error.message)
                 }
@@ -192,7 +206,7 @@ export class DiriceDBClient {
              * Gets statuses.
              */
             get: async function (){
-                let STATUSES_SELECTION = STATUSES.select("*");
+                let STATUSES_SELECTION = supabase.from("statuses").select("*");
                 for (const [key, value] of Object.entries(params as object)){
                     if(!value){
                         continue;
@@ -214,7 +228,7 @@ export class DiriceDBClient {
              * Gets rolls.
              */
             get: async function (){
-                let ROLLS_SELECTION = ROLLS.select("*");
+                let ROLLS_SELECTION = supabase.from("rolls").select("*");
                 for (const [key, value] of Object.entries(params as object)){
                     if(!value){
                         continue;
@@ -235,7 +249,7 @@ export class DiriceDBClient {
                 if(!params){
                     throw new DiriceError("Must specify parameters to create roll!")
                 }
-                let ROLL_CREATION = ROLLS.insert(params as ROLL_TABLE["Insert"]);
+                let ROLL_CREATION = supabase.from("rolls").insert(params as ROLL_TABLE["Insert"]);
                 const { data, error } = (await ROLL_CREATION);
                 if(error){
                     throw new DiriceError(error.message)
@@ -251,7 +265,7 @@ export class DiriceDBClient {
                 if(!params.id){
                     throw new DiriceError("Must specify id of roll to delete!")
                 }
-                let ROLL_DELETION = ROLLS.delete().eq("id", params.id)
+                let ROLL_DELETION = supabase.from("rolls").delete().eq("id", params.id)
                 const { data, error } = (await ROLL_DELETION);
                 if(error){
                     throw new DiriceError(error.message)
@@ -265,7 +279,7 @@ export class DiriceDBClient {
              * Gets players.
              */
             get: async function (){
-                let PLAYERS_SELECTION = PLAYERS.select("*");
+                let PLAYERS_SELECTION = supabase.from("players").select("*");
                 for (const [key, value] of Object.entries(params as object)){
                     if(!value){
                         continue;
