@@ -27,10 +27,6 @@ export class WebServer {
     }
     init(){
         const ET = this.EraserTail;
-        this.server.get('/health', function handler(request, reply) {
-            ET.log("Debug", "/health was rung!")
-            return "I'm feeling pretty good!"
-        })
         this.server.get('/', function handler(request, reply) {
             ET.log("Debug", "/ was rung!")
             return "Yeah good."
