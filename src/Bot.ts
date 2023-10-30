@@ -3,6 +3,7 @@ import { EraserTailClient } from "@pencilfoxstudios/erasertail"
 import ready from "./listeners/ready";
 import interactionCreate from "./listeners/interactionCreate";
 import 'dotenv/config'
+// test thing for dev branch
 const EraserTail = new EraserTailClient({
   APPLICATION_NAME: "DIRICE",
   APPLICATION_NAME_HUMAN: "Dirice",
