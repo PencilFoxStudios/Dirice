@@ -5,7 +5,6 @@ import interactionCreate from "./listeners/interactionCreate";
 import { WebServer } from "./web/WebServer";
 import 'dotenv/config'
 import { DiriceDBClient } from "./api/DiriceDBClient";
-// test thing for dev branch
 const EraserTail = new EraserTailClient({
   APPLICATION_NAME: "DIRICE" + process.env.env?`_${process.env.env!.toUpperCase()}`:"",
   APPLICATION_NAME_HUMAN: "Dirice" + process.env.env?` ${process.env.env}`:"",
