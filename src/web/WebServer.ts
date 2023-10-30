@@ -15,15 +15,7 @@ export class WebServer {
     private EraserTail:EraserTailClient;
     private Dirice:DiriceDBClient;
 
-    private readonly server = fastify(
-        {  logger: {
-            serializers: {
-              req: function (req) {
-                return { url: req.url }
-              }
-            }
-          }}
-    );
+    private readonly server = fastify({logger: false});
     private readonly HOST: string = "127.0.0.1";
     private readonly PORT: number = 8080;
     constructor(client: Client, Dirice:DiriceDBClient, EraserTail:EraserTailClient) {
@@ -34,28 +26,15 @@ export class WebServer {
     }
     init(){
         const ET = this.EraserTail;
-        this.server.get('/', function handler(request, reply) {
-            ET.log("Debug", "/ was rung!")
-            return "Yeah good."
+        this.server.get('*', function handler(request, reply) {
+            ET.log("Debug", request.url??"Unknown URL was rung...")
+            return "I AM ALIVE.";
         })
-        this.server.get('/dev', function handler(request, reply) {
-            ET.log("Debug", "/dev was rung!")
-            return "Yeah goodie."
-        })
-
-        this.server.get('/health', async function handler(request, reply) {
-            return "I'm feeling pretty good!"
-        })
+ 
+    
+          
+ 
          
-        this.TCPServer.listen(this.PORT, this.HOST, () => { 
-            this.EraserTail.log("Debug", `TCP Client listening on ${this.HOST}:${this.PORT}`); 
-        }); 
-        this.TCPServer.on('connection', (socket) => { 
-            var clientAddress = `${socket.remoteAddress}:${socket.remotePort}`; 
-            this.EraserTail.log("Debug", `New client connected: ${clientAddress}`);
-            socket.write("HELLO YES I AM ALIVE. PLEASE DO NOT CRASH. THANKS.")
-            this.EraserTail.log("Debug", `Sent health message.`);
-        }); 
         
 
     }
