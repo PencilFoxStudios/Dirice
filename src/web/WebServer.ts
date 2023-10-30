@@ -21,8 +21,21 @@ export class WebServer {
         this.Discord = client;
         this.Dirice = Dirice;
         this.EraserTail = EraserTail;
-        this.server.get('/health', async function handler(request, reply) {
+        this.init();
+    }
+    init(){
+        const ET = this.EraserTail;
+        this.server.get('/health', function handler(request, reply) {
+            ET.log("Debug", "/health was rung!")
             return "I'm feeling pretty good!"
+        })
+        this.server.get('/', function handler(request, reply) {
+            ET.log("Debug", "/ was rung!")
+            return "Yeah good."
+        })
+        this.server.get('/dev', function handler(request, reply) {
+            ET.log("Debug", "/dev was rung!")
+            return "Yeah goodie."
         })
     }
     async start() {
