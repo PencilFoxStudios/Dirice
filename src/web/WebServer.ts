@@ -7,7 +7,9 @@ export class WebServer {
     private Discord: Client;
     private EraserTail:EraserTailClient;
     private Dirice:DiriceDBClient;
-    private readonly server = fastify();
+    private readonly server = fastify(
+        {logger: true}
+    );
     private readonly PORT: number = 8080;
     constructor(client: Client, Dirice:DiriceDBClient, EraserTail:EraserTailClient) {
         this.Discord = client;
