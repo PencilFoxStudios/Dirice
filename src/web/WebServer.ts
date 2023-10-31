@@ -16,7 +16,7 @@ export class WebServer {
     private Dirice:DiriceDBClient;
 
     private readonly server = fastify({logger: false});
-    private readonly HOST: string = "127.0.0.1";
+    private readonly HOST: string = '0.0.0.0';
     private readonly PORT: number = 8080;
     constructor(client: Client, Dirice:DiriceDBClient, EraserTail:EraserTailClient) {
         this.Discord = client;
@@ -43,7 +43,7 @@ export class WebServer {
             this.EraserTail.log("Debug", `process.env.PORT => ${process.env.PORT}`)
             const port = process.env.PORT?parseInt(process.env.PORT):this.PORT;
             this.EraserTail.log("Debug", `Listening on ${port}`)
-            await this.server.listen({ port: port })
+            await this.server.listen({ port: port, host: this.HOST })
         } catch (err) {
             this.server.log.error(err)
         }
