@@ -139,7 +139,7 @@ export class Campaigns extends PNFXCommand {
                     const userToModify = interaction.options.getUser("user-to-modify", true)
                     userToModifyID = userToModify.id;
                 }
-                campaignID = interaction.options.getInteger("manage-character")
+                campaignID = interaction.options.getInteger("manage-campaign")
                 if (campaignID == null) {
                     await interaction.editReply({
                         embeds: [PNFXEmbeds.error("GENERAL_COMMAND_ERROR")]
