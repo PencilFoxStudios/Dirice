@@ -6,15 +6,38 @@ import { Roll } from './Roll';
 export class Campaign {
     info:Database["public"]["Tables"]["campaigns"]["Row"];
     client:DiriceDBClient = new DiriceDBClient();
+    private characters:Character[] | null = null;
     private rolls:Roll[] | null = null;
     constructor(info:Database["public"]["Tables"]["campaigns"]["Row"] ){
         this.info = info;
     }
+    getDescription(){
+        return this.info.description;
+    }
+    getPhotoURL(){
+        return this.info.photo_url;
+    }
+    getCanManage(){
+        return this.info.manager_ids;
+    }
+
     async fetchRolls(){
         this.rolls = await this.client.roll({campaign_id: this.info.id}).get()
     }
     getRolls(){
+        if(!this.rolls){
+            throw new DiriceError("You must fetch this campaigns's rolls first!")
+        }
         return this.rolls;
+    }
+    async fetchCharacters(){
+        this.characters = await this.client.characters({campaign_id: this.info.id}).get()
+    }
+    getCharacters(){
+        if(!this.characters){
+            throw new DiriceError("You must fetch this campaigns's characters first!")
+        }
+        return this.characters;
     }
     async createRoll(name:string, diceAmount:number, numOfSides:number){
         await this.client.roll({

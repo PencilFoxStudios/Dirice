@@ -3,8 +3,9 @@ import { Roll, RollResult } from './Roll';
 import {DiriceDBClient} from '../api/DiriceDBClient';
 import { DiriceError } from '../errors/DiriceError';
 import { OfflineRoll } from './OfflineRoll';
-import { CharacterNoStatError } from '../errors/CharacterNoStatError';
+
 import { Campaign } from './Campaign';
+import { CharacterNoStatError } from '../errors/Errors';
 export interface RawCharacterStat {
     roll_id: number,
     roll_modifier: number,
@@ -19,10 +20,9 @@ export class Character {
     info: Database["public"]["Tables"]["characters"]["Row"];
     client:DiriceDBClient = new DiriceDBClient();
     private stats?:CharacterStat[];
-    private linkedCampaign:Campaign|null;
+    private linkedCampaign:Campaign|null|undefined;
     constructor(info: Database["public"]["Tables"]["characters"]["Row"]) {
         this.info = info;
-        this.linkedCampaign = null;
     }
     getID(): Database["public"]["Tables"]["characters"]["Row"]["id"] {
         return this.info.id;
@@ -30,17 +30,23 @@ export class Character {
     getName(): Database["public"]["Tables"]["characters"]["Row"]["name"] {
         return this.info.name;
     }
+    getDescription(): Database["public"]["Tables"]["characters"]["Row"]["description"] {
+        return this.info.description;
+    }
     getPhotoURL(): Database["public"]["Tables"]["characters"]["Row"]["photo_url"] {
         return this.info.photo_url;
     }
     getCanRollAs(): Database["public"]["Tables"]["characters"]["Row"]["can_roll_as"] {
         return this.info.can_roll_as;
     }
+    getQuote(): Database["public"]["Tables"]["characters"]["Row"]["quote"] {
+        return this.info.quote;
+    }
     getCanManage(): Database["public"]["Tables"]["characters"]["Row"]["can_manage"] {
         return this.info.can_manage;
     }
-    getCampaign(): Campaign {
-        if(!this.linkedCampaign){
+    getCampaign(): Campaign|null {
+        if(this.linkedCampaign == undefined){
             throw new DiriceError("You must fetch this character's linked campaign first!")
         }
         return this.linkedCampaign;

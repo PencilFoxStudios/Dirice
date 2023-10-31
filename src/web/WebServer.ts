@@ -26,8 +26,8 @@ export class WebServer {
     }
     init(){
         const ET = this.EraserTail;
-        this.server.get('*', function handler(request, reply) {
-            ET.log("Debug", request.url??"Unknown URL was rung...")
+        this.server.get('/', function handler(request, reply) {
+
             return "I AM ALIVE.";
         })
  

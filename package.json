@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "npx tsx watch src/Bot.ts",
     "start": "node dist/Bot.js",
-    "build": "npx tsup src/Bot.ts --minify"
+    "build": "npx tsup src/Bot.ts --minify",
+    "pull-types": "supabase gen types typescript --project-id \"wmxzsvnvwgzwzdwjxjpg\" --schema public > src/database.types.ts"
   },
   "repository": {
     "type": "git",

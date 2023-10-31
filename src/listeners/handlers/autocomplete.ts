@@ -41,6 +41,42 @@ export default async function handleAutocomplete(client: Client, EraserTail: Era
             }
             await interaction.respond(manageableOptions)
             break;
+        case "manage-campaign":
+            const manageableCampOptions:ApplicationCommandOptionChoiceData[] = [];
+            let manageableCamps = await Player.getManageableCampaigns();
+            if(focusedValue.value !== ""){
+                manageableCamps = manageableCamps.filter((campaign:Campaign) => campaign.getName().toLowerCase().startsWith(focusedValue.value.toLowerCase()))
+            }
+            for (const manageableCamp of manageableCamps){
+                manageableCampOptions.push({
+                    name: manageableCamp.getName(),
+                    value: manageableCamp.getID()
+                })
+            }
+            await interaction.respond(manageableCampOptions)
+            break;
+        case "character-from-campaign":
+            const campCharacters:ApplicationCommandOptionChoiceData[] = [];
+            if(!PlayerSettings.selected_campaign){
+                await interaction.respond([{
+                    name: "No campaign selected! Please select a campaign first",
+                    value: "no-campaign"
+                },
+                {
+                    name: "by using /campaigns switch <campaign>",
+                    value: "no-campaign-selected"
+                }])
+                break;
+            }
+            const CampaignCharacters = (await DiriceClient.campaigns({id: PlayerSettings.selected_campaign }).get()).map((campaign:Campaign) => campaign.getCharacters()).flat();
+            for (const character of CampaignCharacters){
+                campCharacters.push({
+                    name: character.getName(),
+                    value: character.getID()
+                })
+            }
+            await interaction.respond(campCharacters)
+            break;
         case "stat":
 
             const stats:ApplicationCommandOptionChoiceData[] = [];

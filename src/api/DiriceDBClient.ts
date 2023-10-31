@@ -3,7 +3,7 @@ import { Database, Json } from '../database.types'
 import { DiriceError } from '../errors/DiriceError'
 import { Campaign } from '../objects/Campaign'
 import { Character, CharacterStat, RawCharacterStat } from '../objects/Character'
-import { ChatInputCommandInteraction, User } from 'discord.js'
+import { Attachment, ChatInputCommandInteraction, User } from 'discord.js'
 import { PostgrestResponseFailure, PostgrestResponseSuccess } from '@supabase/postgrest-js'
 import { Status } from '../objects/Status'
 import { Roll } from '../objects/Roll'
@@ -28,6 +28,16 @@ export class DiriceDBClient {
         this.DiscordID = DiscordID;
     }
 
+    async uploadPhoto(folder:"campaigns"|"characters", image:Attachment, name:string){
+        // what would i do if i wanted to upload into a bucket called "images" and a folder called "campaigns"
+        // const { data, error } = await supabase.storage.from("images/campaigns").upload("my-image.png", image.attachment)
+        const { data, error } = await supabase.storage.from(`images/${folder}`).upload(name, image.attachment.toString())
+        if(error){
+            throw new DiriceError(error.message)
+        }
+        return `https://wmxzsvnvwgzwzdwjxjpg.supabase.co/storage/v1/object/public/${data.path}`;
+    }
+
     authorize = (DiscordID:string) => {
         this.DiscordID = DiscordID;
     }
@@ -36,13 +46,13 @@ export class DiriceDBClient {
         if(!this.DiscordID){
             throw new DiriceError("You must authorize with a valid Discord ID before using me()!")
         }
-        console.log(this.DiscordID)
         let SETTINGS = supabase.from("players").select("*").eq("user_id", this.DiscordID)
         const { data, error } = (await SETTINGS);
         if(!error){
             if(data.length == 0){
                 const newPlayer = {
                     selected_character: null,
+                    selected_campaign: null,
                     user_id: this.DiscordID
                 };
                 await supabase.from("players").insert(newPlayer)
@@ -107,12 +117,12 @@ export class DiriceDBClient {
                 
                   let STATS_MASS_LOOKUP = supabase.from("rolls").select("*").eq("campaign_id", campaignInQuestion.getID());
                   const statsLookup = await STATS_MASS_LOOKUP;
-                  console.log("statsLookup", statsLookup)
+    
                   if (statsLookup.error) {
                     throw new DiriceError(statsLookup.error.message);
                   }
                   const statsLookupData = statsLookup.data;
-                  console.log("statsLookupData", statsLookupData)
+
                   let CHARACTERS_MASS_LOOKUP = supabase.from("characters").select("*").eq("campaign_id", campaignInQuestion.getID());
                 
                   const charactersLookup = (await CHARACTERS_MASS_LOOKUP);
@@ -120,7 +130,7 @@ export class DiriceDBClient {
                     throw new DiriceError(charactersLookup.error.message);
                   }
                   const charactersLookupData = charactersLookup.data;
-                  console.log("charactersLookupData", charactersLookupData)
+        
                   for (const character of charactersLookupData) {
                     const characterOldStats: Json[] = character.stats as Json[];
                     const newStats = [];
@@ -134,7 +144,7 @@ export class DiriceDBClient {
                         });
                       }
                     }
-                    // console.log("[...characterOldStats, ...newStats]", [...characterOldStats, ...newStats])
+
                     // Update the character's stats with the new stats
                     const SPECIFIC_CHARACTER_UPDATE = supabase.from("characters").update({
                       stats: [...characterOldStats, ...newStats],

@@ -2,8 +2,9 @@ import { Database } from '../database.types'
 import { Character } from './Character';
 import { DiriceDBClient, PLAYERS_TABLE, supabase } from '../api/DiriceDBClient';
 import { DiriceError } from '../errors/DiriceError';
-import { CharacterNotFoundError } from '../errors/CharacterNotFoundError';
-import { CharacterAlreadyExistsError } from '../errors/CharacterAlreadyExistsError';
+
+import { CampaignAlreadyExistsError, CampaignFailedToCreateError, CampaignNotFoundError, CharacterAlreadyExistsError, CharacterNotFoundError } from '../errors/Errors';
+import { Campaign } from './Campaign';
 export class Player {
     info:Database["public"]["Tables"]["players"]["Row"];
     client:DiriceDBClient;
@@ -16,6 +17,21 @@ export class Player {
     }
     getSettings(): Database["public"]["Tables"]["players"]["Row"]{
         return this.info;
+    }
+    async createCampaign(campDetails:Database["public"]["Tables"]["campaigns"]["Insert"]): Promise<Campaign>{
+        const OldCampaigns = await this.client.campaigns(campDetails).get();
+        if(OldCampaigns.length > 0){
+            throw new CampaignAlreadyExistsError(OldCampaigns[0]);
+        }
+        await this.client.campaigns(campDetails).create()
+        const NewCampaign = await this.client.campaigns(campDetails).get();
+        if(NewCampaign.length == 0){
+            throw new CampaignFailedToCreateError();
+        }
+
+        return NewCampaign[0];
+
+
     }
     async createCharacter(charDetails:Database["public"]["Tables"]["characters"]["Insert"]): Promise<Character>{
         const OldCharacters = await this.client.characters(charDetails).get();
@@ -45,6 +61,15 @@ export class Player {
         const { data, error } = (await CHARACTERS_SELECTION);
         if(!error){
             return data.map((item) => new Character(item))
+        }else{
+            throw new DiriceError(error.message)
+        }
+    }
+    async getManageableCampaigns () {
+        let CAMPAIGNS_SELECTION = supabase.from("campaigns").select("*").or(`manager_ids.cs.{"${this.info.user_id}"},dm_id.eq.${this.info.user_id}`)
+        const { data, error } = (await CAMPAIGNS_SELECTION);
+        if(!error){
+            return data.map((item) => new Campaign(item))
         }else{
             throw new DiriceError(error.message)
         }

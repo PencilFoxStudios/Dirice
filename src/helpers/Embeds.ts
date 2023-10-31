@@ -3,6 +3,8 @@ import moment from 'moment'
 import * as PNFXTypes from "./types"
 import {RollResult } from "../objects/Roll"
 import { specialNumbers } from './functions'
+import { Campaign } from '../objects/Campaign'
+import { Character } from '../objects/Character'
 export function error(code: PNFXTypes.PNFXBotErrorCode = "UNK", moreInfo?: string): EmbedBuilder {
     const embed = new EmbedBuilder()
         .setColor(0xda4453)
@@ -50,6 +52,44 @@ export function user(user: User | null, customText = user?.tag ?? "Unknown User"
         .setAuthor({
             iconURL: user?.avatarURL() ?? undefined,
             name: customText
+        })
+    return embed
+}
+export function characterInfoEmbed(character:Character){
+    const embed = new EmbedBuilder()
+        .setColor(0x1e1e79)
+        .setTitle(character.getName())
+        .setThumbnail(character.getPhotoURL())
+        .setDescription(`${character.getDescription()}\n*${character.getQuote()}*`)
+        .setFields([
+            {
+                name: "Played by",
+                value: character.getCanRollAs().map((user) => `<@${user}>`).join("\n"),
+                inline: true
+            },
+            {
+                name: "Directed by",
+                value: character.getCanManage().map((user) => `<@${user}>`).join("\n"),
+                inline: true
+            }
+        ])
+        .setFooter({
+            text: `Character ID: ${character.getID()}`
+        })
+    return embed
+}
+export function campaignInfoEmbed(campaign:Campaign){
+    const embed = new EmbedBuilder()
+        .setColor(0x1e1e79)
+        .setTitle(campaign.getName())
+        .setThumbnail(campaign.getPhotoURL())
+        .setDescription(campaign.getDescription())
+        .setFields({
+            name: "Starring",
+            value: campaign.getCharacters().map((char) => char.getName()).join("\n")
+        })
+        .setFooter({
+            text: `Campaign ID: ${campaign.getID()}`
         })
     return embed
 }

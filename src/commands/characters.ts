@@ -1,5 +1,5 @@
 import { EraserTailClient } from "@pencilfoxstudios/erasertail";
-import { CommandInteraction, Client, SlashCommandBuilder, MessagePayload, MessagePayloadOption, ButtonStyle, SlashCommandUserOption, GuildMember, User, Guild, SlashCommandSubcommandBuilder, SlashCommandStringOption, ChatInputCommandInteraction, UserContextMenuCommandInteraction, MessageContextMenuCommandInteraction, SlashCommandIntegerOption, SlashCommandBooleanOption } from "discord.js";
+import { CommandInteraction, Client, SlashCommandBuilder, MessagePayload, MessagePayloadOption, ButtonStyle, SlashCommandUserOption, GuildMember, User, Guild, SlashCommandSubcommandBuilder, SlashCommandStringOption, ChatInputCommandInteraction, UserContextMenuCommandInteraction, MessageContextMenuCommandInteraction, SlashCommandIntegerOption, SlashCommandBooleanOption, SlashCommandAttachmentOption } from "discord.js";
 import { PNFXCommandSupportString } from "../helpers/types";
 import { PNFXCommand } from "../Command";
 import * as PNFXHelpers from "../helpers/functions"
@@ -8,7 +8,7 @@ import * as PNFXTypes from "../helpers/types";
 import PNFXMenu from "../helpers/Menu";
 import { DiriceDBClient } from "../api/DiriceDBClient";
 import { Character } from "../objects/Character";
-import { CharacterAlreadyExistsError } from "../errors/CharacterAlreadyExistsError";
+import { CharacterAlreadyExistsError } from "../errors/Errors";
 
 export class Characters extends PNFXCommand {
     constructor() {
@@ -61,7 +61,7 @@ export class Characters extends PNFXCommand {
                 .addBooleanOption((option: SlashCommandBooleanOption) =>
                 option
                     .setName("can-manage")
-                    .setDescription("Can this user change the stat modifiers of, and other people to manage, your character?")
+                    .setDescription("Can this user change the stat modifiers of, and invite other people to manage, your character?")
                     .setRequired(false)
                 )
             
@@ -92,7 +92,7 @@ export class Characters extends PNFXCommand {
                 .addBooleanOption((option: SlashCommandBooleanOption) =>
                 option
                     .setName("can-manage")
-                    .setDescription("Can this user change the stat modifiers of, and other people to manage, your character?")
+                    .setDescription("Can this user change the stat modifiers of, and invite other people to manage, your character?")
                     .setRequired(false)
                 )
             
@@ -111,8 +111,14 @@ export class Characters extends PNFXCommand {
                     option
                         .setName("link-campaign")
                         .setDescription("Link this character, and its stat options, to an existing campaign.")
-                        .setRequired(true)
+                        .setRequired(false)
                         .setAutocomplete(true)
+                    )
+                    .addAttachmentOption((option: SlashCommandAttachmentOption) =>
+                    option
+                        .setName("photo")
+                        .setDescription("The character's photo.")
+                        .setRequired(false)
                     )
                     .addStringOption((option: SlashCommandStringOption) =>
                     option
@@ -238,6 +244,22 @@ export class Characters extends PNFXCommand {
                 break;
             case "create":
                 try {
+                    const photo = interaction.options.getAttachment("photo")??undefined
+                    function predictExtensionBasedOnContentType(ct:string){
+                        switch(ct){
+                            case "image/png":
+                                return ".png";
+                            case "image/jpeg":
+                                return ".jpg";
+                            case "image/gif":
+                                return ".gif";
+                            case "image/webp":
+                                return ".webp";
+                            default:
+                                return "";
+                        }
+                    }
+                   
                     const newChar = await Player.createCharacter({
                         name: interaction.options.getString("name")??undefined,
                         description: interaction.options.getString("description")??undefined,
@@ -245,11 +267,16 @@ export class Characters extends PNFXCommand {
                         campaign_id: interaction.options.getInteger("link-campaign")??undefined,
                         owner_id: interaction.user.id
                     })
+                    const photoURL = photo ? await DiriceClient.uploadPhoto("characters", photo, `U${interaction.user.id}_C${newChar.getID()}${photo?.name?photo.name.split(".").pop():`${predictExtensionBasedOnContentType(photo.contentType!)}`}`) : null;
+                    await DiriceClient.campaigns({ id: newChar.getID(), photo_url: photoURL ?? undefined }).update()
                     await newChar.fetchCampaign()
+                    const charCampaign = newChar.getCampaign();
                     await interaction.editReply({
-                        embeds: [PNFXEmbeds.success(`Character ${newChar.getName()} has been created under ${newChar.getCampaign().getName()}!`)]
+                        embeds: [PNFXEmbeds.success(`Character ${newChar.getName()} has been created${charCampaign?` under ${charCampaign.getName()}`:""}!`)]
                     });
-                    await newChar.getCampaign().syncStatsWithCharacters()
+                    if(charCampaign != null){
+                        await charCampaign.syncStatsWithCharacters()
+                    }
                 } catch (error) {
                     if(error instanceof CharacterAlreadyExistsError){
                         await interaction.editReply({
@@ -310,8 +337,9 @@ export class Characters extends PNFXCommand {
                 });
                 break;
             case "info":
+                // return the character's info embed
                 await interaction.editReply({
-                    embeds: [PNFXEmbeds.error("NOT_CONFIGURED", "to be implemented...")]
+                    embeds: [PNFXEmbeds.characterInfoEmbed(character)]
                 });
                 break;
         }
