@@ -7,8 +7,9 @@ import PNFXMenu from "../helpers/Menu"
 import { DiriceDBClient } from "../api/DiriceDBClient";
 import { Character } from "../objects/Character";
 import { OfflineRoll } from "../objects/OfflineRoll";
-import { CharacterNoStatError } from "../errors/CharacterNoStatError";
+
 import { modifierToString } from "../helpers/functions";
+import { CharacterNoStatError } from "../errors/Errors";
 export class Roll extends PNFXCommand {
     constructor() {
         super(
@@ -77,7 +78,11 @@ export class Roll extends PNFXCommand {
                     let Rolls;
                     await CurrentCharacter.fetchStats();
                     await CurrentCharacter.fetchCampaign()
-                    await CurrentCharacter.getCampaign().syncStatsWithCharacters()
+                    const possibleCampaign = CurrentCharacter.getCampaign();
+                    if(possibleCampaign){
+                        await possibleCampaign.syncStatsWithCharacters()
+                    }
+                    
                 
 
                     if(chosen.stat){
