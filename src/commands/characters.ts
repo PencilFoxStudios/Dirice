@@ -337,7 +337,9 @@ export class Characters extends PNFXCommand {
                 });
                 break;
             case "info":
-                // return the character's info embed
+                await character.fetch();
+                await character.fetchCampaign();
+                await character.fetchStats();
                 await interaction.editReply({
                     embeds: [PNFXEmbeds.characterInfoEmbed(character)]
                 });

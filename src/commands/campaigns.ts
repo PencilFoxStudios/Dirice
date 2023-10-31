@@ -281,9 +281,11 @@ export class Campaigns extends PNFXCommand {
                 });
                 break;
             case "info":
+                await campaign.fetchCharacters();
+                await campaign.fetchRolls();
                 await interaction.editReply({
-                    embeds: [PNFXEmbeds.error("NOT_CONFIGURED", "to be implemented...")]
-                });
+                    embeds: [PNFXEmbeds.campaignInfoEmbed(campaign)]
+                })
                 break;
         }
 
