@@ -39,6 +39,26 @@ export const PNFXBotError = {
     PRETTY: "**The character you're attempting to create appears to already exist in this campaign...**\nTry changing some details!",
     RAW: "Character already exists."
   },
+  "CAMPAIGN_ALREADY_EXISTS": {
+    PRETTY: "**The campaign you're attempting to create appears to already exist...**\nTry changing some details!",
+    RAW: "Campaign already exists."
+  },
+  "ROLL_ALREADY_EXISTS": {
+    PRETTY: "**The roll you're attempting to create appears to already exist...**\nTry changing some details!",
+    RAW: "Roll already exists."
+  },
+  "ROLL_NOT_FOUND": {
+    PRETTY: "**The specified roll could not be found.**\nDo you have permission to manage it?",
+    RAW: "Roll not found."
+  },
+  "ROLL_NO_STAT": {
+    PRETTY: "**The specified roll does not have a stat.**\nPlease contact the developers!",
+    RAW: "Roll has no stat."
+  },
+  "ROLL_NO_CHARACTER": {
+    PRETTY: "**The specified roll does not have a character.**\nPlease contact the developers!",
+    RAW: "Roll has no character."
+  },
   "USER_NOT_FOUND": {
     PRETTY: "**The specified user could not be found.**\nThey may have either left the server, my cache, or both!",
     RAW: "User not found."

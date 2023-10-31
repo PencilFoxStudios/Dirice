@@ -235,7 +235,7 @@ export class Campaigns extends PNFXCommand {
                 } catch (error) {
                     if (error instanceof CampaignAlreadyExistsError) {
                         await interaction.editReply({
-                            embeds: [PNFXEmbeds.error("CHARACTER_ALREADY_EXISTS")]
+                            embeds: [PNFXEmbeds.error("CAMPAIGN_ALREADY_EXISTS")]
                         });
                         return;
                     }
@@ -243,7 +243,7 @@ export class Campaigns extends PNFXCommand {
                 }
 
                 return;
-            case "switch":
+            default:
                 campaignID = interaction.options.getInteger("manage-campaign")
                 campaignsInDB = await Player.getManageableCampaigns()
 
