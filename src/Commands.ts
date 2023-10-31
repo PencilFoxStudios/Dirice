@@ -1,4 +1,5 @@
 import { PNFXCommand } from "./Command";
+import { Campaigns } from "./commands/campaigns";
 import { Characters } from "./commands/characters";
 // Import Commands
 import { Mod } from "./commands/mod";
@@ -23,6 +24,10 @@ const Commands: PNFXCommand[] = [];
 
             if(true){ 
                 Commands.push(new Roll())
+            }
+
+            if(true){
+                Commands.push(new Campaigns())
             }
 
 
