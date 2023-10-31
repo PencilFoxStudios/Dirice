@@ -60,11 +60,11 @@ export default async function handleAutocomplete(client: Client, EraserTail: Era
             if(!PlayerSettings.selected_campaign){
                 await interaction.respond([{
                     name: "No campaign selected! Please select a campaign first",
-                    value: "no-campaign"
+                    value: 0
                 },
                 {
                     name: "by using /campaigns switch <campaign>",
-                    value: "no-campaign-selected"
+                    value: 0
                 }])
                 break;
             }

@@ -21,7 +21,7 @@ export class Campaigns extends PNFXCommand {
             // Supported Methods of Running
             ["SLASH"],
             // Should I make the user the only one able to see the reply?
-            true
+            false
         );
         (this.SlashCommand as SlashCommandBuilder)
             .addSubcommand((subcommand: SlashCommandSubcommandBuilder) =>
@@ -143,6 +143,12 @@ export class Campaigns extends PNFXCommand {
                 if (campaignID == null) {
                     await interaction.editReply({
                         embeds: [PNFXEmbeds.error("GENERAL_COMMAND_ERROR")]
+                    });
+                    return
+                }
+                if(campaignID == 0){
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("CAMPAIGN_NOT_FOUND")]
                     });
                     return
                 }
