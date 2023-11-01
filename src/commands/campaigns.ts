@@ -36,6 +36,11 @@ export class Campaigns extends PNFXCommand {
                             .setAutocomplete(true)
                     )
             )
+            /**
+             * IMPLEMENT BELOW!!!!
+             * 
+             * @TODO
+             */
             .addSubcommand((subcommand: SlashCommandSubcommandBuilder) =>
                 subcommand
                     .setName('kick-character')
@@ -245,6 +250,10 @@ export class Campaigns extends PNFXCommand {
                         });
                         return;
                     }
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("UNK", error as any??undefined)]
+                    });
+                    EraserTail.log('Error', error as any)
                     throw error;
                 }
 
