@@ -250,9 +250,9 @@ export class Campaigns extends PNFXCommand {
                         });
                         return;
                     }
-                    EraserTail.log('Error', error as any)
+                    console.log(error)
                     await interaction.editReply({
-                        embeds: [PNFXEmbeds.error("UNK", error as any??undefined)]
+                        embeds: [PNFXEmbeds.error("UNK")]
                     });
                     
                     throw error;
