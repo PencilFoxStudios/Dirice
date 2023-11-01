@@ -29,19 +29,19 @@ export class DiriceDBClient {
         this.DiscordID = DiscordID;
     }
 
-    async uploadPhoto(folder: 'campaigns' | 'characters', image: Attachment, name: string) {
+    async uploadPhoto(folder: 'campaigns' | 'characters', image: Attachment, name: string, contentType:string) {
 
         const attachmentData = await axios.get(image.url, { responseType: 'arraybuffer' });
         if(!attachmentData.data) {
             throw new StorageBucketRejectError("Could not get attachment data!")
         }
-        const { data, error } = await supabase.storage.from(`images/${folder}`).upload(name, attachmentData.data);
+        const { data, error } = await supabase.storage.from(`images/${folder}`).upload(name, attachmentData.data, {contentType: contentType});
 
         if (error) {
             throw new StorageBucketRejectError(error.message);
         }
 
-        return `https://wmxzsvnvwgzwzdwjxjpg.supabase.co/storage/v1/object/public/${data.path}`;
+        return `https://wmxzsvnvwgzwzdwjxjpg.supabase.co/storage/v1/object/public/images/${folder}/${data.path}`;
 
     }
 
