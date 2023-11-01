@@ -71,6 +71,11 @@ export const PNFXBotError = {
     PRETTY: "**No Options Available**\nGiven the current circumstances, there are no further actions available.",
     RAW: "No actions available."
   },
+  "STORAGE_BUCKET_REJECT":{
+    PRETTY: "**Storage Bucket Rejected**\nOur storage bucket has rejected your request to upload your file. Please try again with another file.",
+    RAW: "Storage Bucket Rejected."
+  
+  },
   "UNK": {
     PRETTY: "**Unknown Error**\nPlease contact the developers!",
     RAW: "Unknown Error!"

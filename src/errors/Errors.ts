@@ -98,3 +98,8 @@ export class UserNoStatsError extends DiriceError{
         super(`The user does not have any stats!`)
     }
 }
+export class StorageBucketRejectError extends DiriceError{
+    constructor(msg:string){
+        super(`The storage bucket rejected your request.\n${msg}`)
+    }
+}

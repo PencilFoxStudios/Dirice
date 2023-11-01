@@ -58,6 +58,9 @@ export class Campaign {
         await RollToBeExecuted.delete()
         await this.syncStatsWithCharacters();
     }
+    async delete(){
+        await this.client.campaigns(this.info).delete();
+    }
     getID(): Database["public"]["Tables"]["campaigns"]["Row"]["id"] {
         return this.info.id;
     }

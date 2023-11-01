@@ -8,8 +8,9 @@ import * as PNFXTypes from "../helpers/types";
 import PNFXMenu from "../helpers/Menu";
 import { DiriceDBClient } from "../api/DiriceDBClient";
 import { Character } from "../objects/Character";
-import { CampaignAlreadyExistsError, CharacterAlreadyExistsError } from "../errors/Errors";
+import { CampaignAlreadyExistsError, CharacterAlreadyExistsError, StorageBucketRejectError } from "../errors/Errors";
 import { Campaign } from "../objects/Campaign";
+import { DiriceError } from "src/errors/DiriceError";
 
 export class Campaigns extends PNFXCommand {
     constructor() {
@@ -211,11 +212,12 @@ export class Campaigns extends PNFXCommand {
                 });
                 break;
             case "create":
+                let newCampaign;
                 try {
                     const photo = interaction.options.getAttachment("photo");
                     // Upload photo to supabase "photos" bucket under "campaigns" folder.
                     
-                    const newCampaign = await Player.createCampaign({
+                    newCampaign = await Player.createCampaign({
                         name: interaction.options.getString("name") ?? undefined,
                         description: interaction.options.getString("description") ?? undefined,
                         dm_id: interaction.user.id
@@ -236,7 +238,9 @@ export class Campaigns extends PNFXCommand {
                     }
                     const photoURL = photo ? await DiriceClient.uploadPhoto("campaigns", photo, `U${interaction.user.id}_C${newCampaign.getID()}${photo?.name?photo.name.split(".").pop():`${predictExtensionBasedOnContentType(photo.contentType!)}`}`) : null;
                     await DiriceClient.campaigns({ id: newCampaign.getID(), photo_url: photoURL ?? undefined }).update()
+                    
                     const successEmbed = PNFXEmbeds.success(`Campaign ${newCampaign.getName()} has been created!`);
+                    
                     if (photoURL) {
                         successEmbed.setThumbnail(photoURL)
                     }
@@ -250,7 +254,15 @@ export class Campaigns extends PNFXCommand {
                         });
                         return;
                     }
-                    console.log(error)
+                    if (error instanceof StorageBucketRejectError) {
+                        await newCampaign?.delete();
+                        await interaction.editReply({
+                            embeds: [PNFXEmbeds.error("STORAGE_BUCKET_REJECT")]
+                        });
+                        return;
+                    }
+                    error = (error as unknown) as Error;
+                    EraserTail.log("Error", "Error creating campaign: " + (error as Error).message)
                     await interaction.editReply({
                         embeds: [PNFXEmbeds.error("UNK")]
                     });

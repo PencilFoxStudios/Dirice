@@ -10,6 +10,7 @@ import { Roll } from '../objects/Roll'
 import { Player } from '../objects/Player'
 import { EraserTailClient } from '@pencilfoxstudios/erasertail'
 import { removeElementFromArray } from '../helpers/functions'
+import { StorageBucketRejectError } from '../errors/Errors'
 
 export const supabase = createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_TOKEN!)
 
@@ -33,7 +34,7 @@ export class DiriceDBClient {
         // const { data, error } = await supabase.storage.from("images/campaigns").upload("my-image.png", image.attachment)
         const { data, error } = await supabase.storage.from(`images/${folder}`).upload(name, image.attachment.toString())
         if(error){
-            throw new DiriceError(error.message)
+            throw new StorageBucketRejectError(error.message)
         }
         return `https://wmxzsvnvwgzwzdwjxjpg.supabase.co/storage/v1/object/public/${data.path}`;
     }
@@ -98,6 +99,22 @@ export class DiriceDBClient {
                 }
                 let CAMPAIGN_CREATION = supabase.from("campaigns").insert(params as CAMPAIGNS_TABLE["Insert"]);
                 const { data, error } = (await CAMPAIGN_CREATION);
+                if(error){
+                    throw new DiriceError(error.message)
+                }
+            },
+            /**
+             * Deletes campaigns.
+             */
+            delete: async function (){
+                if(!params){
+                    throw new DiriceError("Must specify parameters to delete campaign!")
+                }
+                if(!params.id){
+                    throw new DiriceError("Must specify id of campaign to delete!")
+                }
+                let CAMPAIGN_DELETION = supabase.from("campaigns").delete().eq("id", params.id)
+                const { data, error } = (await CAMPAIGN_DELETION);
                 if(error){
                     throw new DiriceError(error.message)
                 }
