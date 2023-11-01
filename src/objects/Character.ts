@@ -68,6 +68,15 @@ export class Character {
         return this;
         
     }
+    async setCampaign(campaign:Campaign): Promise<Character> {
+        await this.fetch();
+        await this.client.characters({ id: this.info.id, campaign_id: campaign.getID() }).update();
+        this.linkedCampaign = campaign;
+        return this;
+    }
+    async delete(){
+        await this.client.characters(this.info).delete();
+    }
     async fetchStats(): Promise<Character> {
         await this.fetch();
         const stats: CharacterStat[] = [];

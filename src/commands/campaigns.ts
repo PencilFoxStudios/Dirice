@@ -236,7 +236,7 @@ export class Campaigns extends PNFXCommand {
                                 return "";
                         }
                     }
-                    const photoURL = photo ? await DiriceClient.uploadPhoto("campaigns", photo, `U${interaction.user.id}_C${newCampaign.getID()}${photo?.name?photo.name.split(".").pop():`${predictExtensionBasedOnContentType(photo.contentType!)}`}`) : null;
+                    const photoURL = photo ? await DiriceClient.uploadPhoto("campaigns", photo, `U${interaction.user.id}_C${newCampaign.getID()}.${photo?.name?photo.name.split(".").pop():`${predictExtensionBasedOnContentType(photo.contentType!)}`}`) : null;
                     await DiriceClient.campaigns({ id: newCampaign.getID(), photo_url: photoURL ?? undefined }).update()
                     
                     const successEmbed = PNFXEmbeds.success(`Campaign ${newCampaign.getName()} has been created!`);

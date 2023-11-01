@@ -8,7 +8,7 @@ import * as PNFXTypes from "../helpers/types";
 import PNFXMenu from "../helpers/Menu";
 import { DiriceDBClient } from "../api/DiriceDBClient";
 import { Character } from "../objects/Character";
-import { CharacterAlreadyExistsError } from "../errors/Errors";
+import { CharacterAlreadyExistsError, StorageBucketRejectError } from "../errors/Errors";
 
 export class Characters extends PNFXCommand {
     constructor() {
@@ -243,6 +243,7 @@ export class Characters extends PNFXCommand {
                 });
                 break;
             case "create":
+                let newChar;
                 try {
                     const photo = interaction.options.getAttachment("photo")??undefined
                     function predictExtensionBasedOnContentType(ct:string){
@@ -260,14 +261,14 @@ export class Characters extends PNFXCommand {
                         }
                     }
                    
-                    const newChar = await Player.createCharacter({
+                    newChar = await Player.createCharacter({
                         name: interaction.options.getString("name")??undefined,
                         description: interaction.options.getString("description")??undefined,
                         quote: interaction.options.getString("quote")??undefined,
                         campaign_id: interaction.options.getInteger("link-campaign")??undefined,
                         owner_id: interaction.user.id
                     })
-                    const photoURL = photo ? await DiriceClient.uploadPhoto("characters", photo, `U${interaction.user.id}_C${newChar.getID()}${photo?.name?photo.name.split(".").pop():`${predictExtensionBasedOnContentType(photo.contentType!)}`}`) : null;
+                    const photoURL = photo ? await DiriceClient.uploadPhoto("characters", photo, `U${interaction.user.id}_C${newChar.getID()}.${photo?.name?photo.name.split(".").pop():`${predictExtensionBasedOnContentType(photo.contentType!)}`}`) : null;
                     await DiriceClient.campaigns({ id: newChar.getID(), photo_url: photoURL ?? undefined }).update()
                     await newChar.fetchCampaign()
                     const charCampaign = newChar.getCampaign();
@@ -284,6 +285,20 @@ export class Characters extends PNFXCommand {
                         });
                         return;
                     }
+
+                    if (error instanceof StorageBucketRejectError) {
+                        await newChar?.delete();
+                        await interaction.editReply({
+                            embeds: [PNFXEmbeds.error("STORAGE_BUCKET_REJECT")]
+                        });
+                        return;
+                    }
+                    error = (error as unknown) as Error;
+                    EraserTail.log("Error", "Error creating campaign: " + (error as Error).message)
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("UNK")]
+                    });
+                    
                     throw error;
                 }
 

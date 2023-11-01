@@ -238,6 +238,22 @@ export class DiriceDBClient {
                     throw new DiriceError(error.message)
                 }
             },
+            /**
+             * Deletes characters.
+             */
+            delete: async function (){
+                if(!params){
+                    throw new DiriceError("Must specify parameters to delete character!")
+                }
+                if(!params.id){
+                    throw new DiriceError("Must specify id of character to delete!")
+                }
+                let CHARACTER_DELETION = supabase.from("characters").delete().eq("id", params.id)
+                const { data, error } = (await CHARACTER_DELETION);
+                if(error){
+                    throw new DiriceError(error.message)
+                }
+            }
         }
     }
     status = function(params?:STATUS_TABLE["Update"]){
