@@ -236,7 +236,7 @@ export class Campaigns extends PNFXCommand {
                                 return "";
                         }
                     }
-                    const photoURL = photo ? await DiriceClient.uploadPhoto("campaigns", photo, `U${interaction.user.id}_C${newCampaign.getID()}.${photo?.name?photo.name.split(".").pop():`${predictExtensionBasedOnContentType(photo.contentType!)}`}`) : null;
+                    const photoURL = photo ? await DiriceClient.uploadPhoto("campaigns", photo, `U${interaction.user.id}_CAMP${newCampaign.getID()}.${photo?.name?photo.name.split(".").pop():`${predictExtensionBasedOnContentType(photo.contentType!)}`}`) : null;
                     await DiriceClient.campaigns({ id: newCampaign.getID(), photo_url: photoURL ?? undefined }).update()
                     
                     const successEmbed = PNFXEmbeds.success(`Campaign ${newCampaign.getName()} has been created!`);
@@ -257,7 +257,7 @@ export class Campaigns extends PNFXCommand {
                     if (error instanceof StorageBucketRejectError) {
                         await newCampaign?.delete();
                         await interaction.editReply({
-                            embeds: [PNFXEmbeds.error("STORAGE_BUCKET_REJECT")]
+                            embeds: [PNFXEmbeds.error("STORAGE_BUCKET_REJECT", error.message)]
                         });
                         return;
                     }

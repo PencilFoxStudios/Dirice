@@ -268,7 +268,7 @@ export class Characters extends PNFXCommand {
                         campaign_id: interaction.options.getInteger("link-campaign")??undefined,
                         owner_id: interaction.user.id
                     })
-                    const photoURL = photo ? await DiriceClient.uploadPhoto("characters", photo, `U${interaction.user.id}_C${newChar.getID()}.${photo?.name?photo.name.split(".").pop():`${predictExtensionBasedOnContentType(photo.contentType!)}`}`) : null;
+                    const photoURL = photo ? await DiriceClient.uploadPhoto("characters", photo, `U${interaction.user.id}_CHAR${newChar.getID()}.${photo?.name?photo.name.split(".").pop():`${predictExtensionBasedOnContentType(photo.contentType!)}`}`) : null;
                     await DiriceClient.campaigns({ id: newChar.getID(), photo_url: photoURL ?? undefined }).update()
                     await newChar.fetchCampaign()
                     const charCampaign = newChar.getCampaign();
@@ -289,7 +289,7 @@ export class Characters extends PNFXCommand {
                     if (error instanceof StorageBucketRejectError) {
                         await newChar?.delete();
                         await interaction.editReply({
-                            embeds: [PNFXEmbeds.error("STORAGE_BUCKET_REJECT")]
+                            embeds: [PNFXEmbeds.error("STORAGE_BUCKET_REJECT", error.message)]
                         });
                         return;
                     }
