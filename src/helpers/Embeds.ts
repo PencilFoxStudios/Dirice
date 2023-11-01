@@ -17,7 +17,7 @@ export function error(code: PNFXTypes.PNFXBotErrorCode = "UNK", moreInfo?: strin
     if(moreInfo){
         embed.addFields({
             name: "Hint",
-            value: moreInfo
+            value: moreInfo as string
         })
     }
     return embed
