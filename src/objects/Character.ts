@@ -56,7 +56,7 @@ export class Character {
     }
     async fetchCampaign(): Promise<Character> {
         await this.fetch();
-        if(!this.info.campaign_id){
+        if(this.info.campaign_id == null){
             this.linkedCampaign = null;
         }else{
             const Camps:Campaign[] = await this.client.campaigns({ id: this.info.campaign_id }).get();
