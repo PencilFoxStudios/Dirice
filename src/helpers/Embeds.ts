@@ -1,8 +1,8 @@
 import { ColorResolvable, EmbedBuilder, EmbedField, User } from 'discord.js'
 import moment from 'moment'
 import * as PNFXTypes from "./types"
-import {RollResult } from "../objects/Roll"
-import { specialNumbers } from './functions'
+import {Roll, RollResult } from "../objects/Roll"
+import { modifierToString, specialNumbers } from './functions'
 import { Campaign } from '../objects/Campaign'
 import { Character } from '../objects/Character'
 export function error(code: PNFXTypes.PNFXBotErrorCode = "UNK", moreInfo?: string): EmbedBuilder {
@@ -52,6 +52,52 @@ export function user(user: User | null, customText = user?.tag ?? "Unknown User"
         .setAuthor({
             iconURL: user?.avatarURL() ?? undefined,
             name: customText
+        })
+    return embed
+}
+export function characterStatsEmbed(character:Character){
+    const embed = new EmbedBuilder()
+        .setColor(0x1e1e79)
+        .setTitle(character.getName())
+        .setThumbnail(character.getPhotoURL())
+        .setDescription(`**${character.getName()}**'s Stats`)
+        .setFields(character.getStats().map((stat) => {
+            return {
+                name: stat.roll_name,
+                value: `${modifierToString(stat.roll_modifier)}`,
+                inline: true
+            }
+        }))
+        .setFooter({
+            text: `Character ID: ${character.getID()}`
+        })
+    return embed
+
+}
+export function rollInfoEmbed(roll:Roll){
+    const embed = new EmbedBuilder()
+        .setColor(0x1e1e79)
+        .setTitle(roll.getName())
+        .setDescription(`**${roll.getOwner().getName()}**'s *${roll.getName()}* Roll`)
+        .setFields([
+            {
+                name: "Dice Amount",
+                value: roll.getDiceAmount().toString(),
+                inline: true
+            },
+            {
+                name: "Dice Sides",
+                value: roll.getDiceSides().toString(),
+                inline: true
+            },
+            {
+                name: "Modifier",
+                value: roll.getModifier().toString(),
+                inline: true
+            }
+        ])
+        .setFooter({
+            text: `Roll ID: ${roll.getID()}`
         })
     return embed
 }

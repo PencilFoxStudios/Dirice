@@ -76,6 +76,10 @@ export const PNFXBotError = {
     RAW: "Storage Bucket Rejected."
   
   },
+  "CAMPAIGN_NOT_OPEN":{
+    PRETTY: "**Campaign is not currently open to new characters!**\nIf you believe this is a mistake, please ask your DM to open the campaign.",
+    RAW: "Campaign is not open."
+  },
   "UNK": {
     PRETTY: "**Unknown Error**\nPlease contact the developers!",
     RAW: "Unknown Error!"

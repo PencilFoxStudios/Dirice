@@ -10,11 +10,11 @@ import { OfflineRoll } from "../objects/OfflineRoll";
 
 import { modifierToString } from "../helpers/functions";
 import { CharacterNoStatError } from "../errors/Errors";
-export class Roll extends PNFXCommand {
+export class Dice extends PNFXCommand {
     constructor() {
         super(
             // Command Name
-            "roll",
+            "dice",
             // Command Description
             "Roll a dice based on your current character. Optional parameters will override any character stats.",
             // Supported Methods of Running

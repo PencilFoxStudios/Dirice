@@ -17,6 +17,7 @@ export interface Database {
           id: number
           manager_ids: string[]
           name: string
+          open: boolean
           photo_url: string | null
         }
         Insert: {
@@ -26,6 +27,7 @@ export interface Database {
           id?: number
           manager_ids?: string[]
           name?: string
+          open?: boolean
           photo_url?: string | null
         }
         Update: {
@@ -35,6 +37,7 @@ export interface Database {
           id?: number
           manager_ids?: string[]
           name?: string
+          open?: boolean
           photo_url?: string | null
         }
         Relationships: []
@@ -124,7 +127,8 @@ export interface Database {
       }
       rolls: {
         Row: {
-          campaign_id: number
+          campaign_id: number | null
+          character_id: number | null
           created_at: string
           dice_amt: number
           dice_max: number
@@ -132,7 +136,8 @@ export interface Database {
           roll_name: string
         }
         Insert: {
-          campaign_id: number
+          campaign_id?: number | null
+          character_id?: number | null
           created_at?: string
           dice_amt?: number
           dice_max?: number
@@ -140,7 +145,8 @@ export interface Database {
           roll_name: string
         }
         Update: {
-          campaign_id?: number
+          campaign_id?: number | null
+          character_id?: number | null
           created_at?: string
           dice_amt?: number
           dice_max?: number
@@ -152,6 +158,12 @@ export interface Database {
             foreignKeyName: "rolls_campaign_id_fkey"
             columns: ["campaign_id"]
             referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rolls_character_id_fkey"
+            columns: ["character_id"]
+            referencedRelation: "characters"
             referencedColumns: ["id"]
           }
         ]

@@ -8,7 +8,7 @@ import * as PNFXTypes from "../helpers/types";
 import PNFXMenu from "../helpers/Menu";
 import { DiriceDBClient } from "../api/DiriceDBClient";
 import { Character } from "../objects/Character";
-import { CampaignAlreadyExistsError, CharacterAlreadyExistsError, StorageBucketRejectError } from "../errors/Errors";
+import { CampaignAlreadyExistsError, CharacterAlreadyExistsError, PlayerNoPermissionsError, StorageBucketRejectError } from "../errors/Errors";
 import { Campaign } from "../objects/Campaign";
 import { DiriceError } from "src/errors/DiriceError";
 
@@ -37,11 +37,6 @@ export class Campaigns extends PNFXCommand {
                             .setAutocomplete(true)
                     )
             )
-            /**
-             * IMPLEMENT BELOW!!!!
-             * 
-             * @TODO
-             */
             .addSubcommand((subcommand: SlashCommandSubcommandBuilder) =>
                 subcommand
                     .setName('kick-character')
@@ -271,6 +266,8 @@ export class Campaigns extends PNFXCommand {
                 }
 
                 return;
+            
+
             default:
                 campaignID = interaction.options.getInteger("manage-campaign")
                 campaignsInDB = await Player.getManageableCampaigns()
@@ -314,6 +311,51 @@ export class Campaigns extends PNFXCommand {
                 await interaction.editReply({
                     embeds: [PNFXEmbeds.campaignInfoEmbed(campaign)]
                 })
+                break;
+            case "kick-character":
+                const characterID = interaction.options.getInteger("character-from-campaign")
+                if (characterID == null) {
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("GENERAL_COMMAND_ERROR")]
+                    });
+                    return
+                }
+                const characterInQuestionQuery = await DiriceClient.characters({ id: characterID }).get();
+                if (characterInQuestionQuery.length == 0) {
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("CHARACTER_NOT_FOUND")]
+                    });
+                    return
+                }
+                if (characterInQuestionQuery.length > 1) {
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("UNK", "characterInQuestionQuery.length > 1")]
+                    });
+                    EraserTail.log("Warn", "characterInQuestionQuery.length > 1 for character ID " + characterID)
+                    return
+                }
+                const character = characterInQuestionQuery[0];
+                await campaign.fetchCharacters()
+
+                if (!campaign.getCharacters().some((characterGot:Character) => characterGot.getID() == character.getID())) {
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("UNK", "Character not in campaign!")]
+                    });
+                    return
+                }
+                try {
+                    await Player.kickCharacterFromCampaign(campaign, character);
+                } catch (error) {
+                    if(error instanceof PlayerNoPermissionsError){
+                        await interaction.editReply({
+                            embeds: [PNFXEmbeds.error("UNK", error.message)]
+                        });
+                        return
+                    }
+                }
+                await interaction.editReply({
+                    embeds: [PNFXEmbeds.success(`You have kicked **${character.getName()}** from **${campaign.getName()}**.`)]
+                });
                 break;
         }
 

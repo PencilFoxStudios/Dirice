@@ -5,7 +5,7 @@ import { DiriceError } from '../errors/DiriceError';
 import { OfflineRoll } from './OfflineRoll';
 
 import { Campaign } from './Campaign';
-import { CharacterNoStatError } from '../errors/Errors';
+import { CampaignNotOpenError, CharacterNoStatError } from '../errors/Errors';
 export interface RawCharacterStat {
     roll_id: number,
     roll_modifier: number,
@@ -51,6 +51,17 @@ export class Character {
         }
         return this.linkedCampaign;
     }
+    getOwnerID(): string {
+        return this.info.owner_id;
+    }
+    async createRoll(name:string, diceAmount:number=1, numOfSides:number=20){
+        await this.client.roll({
+            character_id: this.info.id,
+            dice_amt: diceAmount,
+            dice_max: numOfSides,
+            roll_name: name
+        }).create();
+    }
     async fetch(): Promise<void> {
         this.info = (await this.client.characters({id: this.info.id }).get())[0].info;
     }
@@ -68,14 +79,71 @@ export class Character {
         return this;
         
     }
-    async setCampaign(campaign:Campaign): Promise<Character> {
+    async joinCampaign(campaign:Campaign|null): Promise<Character> {
         await this.fetch();
-        await this.client.characters({ id: this.info.id, campaign_id: campaign.getID() }).update();
-        this.linkedCampaign = campaign;
+        if(campaign){
+            if(campaign.isOpen() || campaign.getCanManage().includes(this.getOwnerID())){
+                await this.client.characters({ id: this.info.id, campaign_id: campaign.getID() }).update();
+                this.linkedCampaign = campaign;
+            }else{
+                throw new CampaignNotOpenError()
+            }
+
+        }else{
+            await this.client.characters({ id: this.info.id, campaign_id: null }).update();
+            this.linkedCampaign = null;
+        }
+       
+        
         return this;
     }
     async delete(){
         await this.client.characters(this.info).delete();
+    }
+    async removeStat(stat:Roll): Promise<Character> {
+        await this.fetchStats();
+        const statsUpdated:RawCharacterStat[] = [];
+        for(const statToCheck of this.stats!){
+            if(statToCheck.roll.getID() !== stat.getID()){
+                statsUpdated.push(
+                    {
+                        roll_id: statToCheck.roll.getID(),
+                        roll_modifier: statToCheck.roll_modifier
+                    }
+                
+                );
+            }
+        }
+        await this.client.characters({ id: this.info.id, stats:statsUpdated as any }).update();
+        return this;
+    }
+    async updateStats(statsToUpdate:RawCharacterStat[]): Promise<Character> {
+        await this.fetchStats();
+        let statsUpdated:RawCharacterStat[] = [];
+        for(const stat of this.stats!){
+            const statToUpdate = statsToUpdate.find((compStat:RawCharacterStat) => compStat.roll_id == stat.roll.getID());
+            if(statToUpdate){
+
+                statsUpdated.push(
+                    {
+                        roll_id: stat.roll.getID(),
+                        roll_modifier: statToUpdate.roll_modifier
+                    }
+                
+                );
+            }else{
+                statsUpdated.push(
+                    {
+                        roll_id: stat.roll.getID(),
+                        roll_modifier: stat.roll_modifier
+                    }
+                
+                );
+            
+            }
+        }
+        await this.client.characters({ id: this.info.id, stats:statsUpdated as any }).update();
+        return this;
     }
     async fetchStats(): Promise<Character> {
         await this.fetch();

@@ -3,8 +3,9 @@ import { Character } from './Character';
 import { DiriceDBClient, PLAYERS_TABLE, supabase } from '../api/DiriceDBClient';
 import { DiriceError } from '../errors/DiriceError';
 
-import { CampaignAlreadyExistsError, CampaignFailedToCreateError, CampaignNotFoundError, CharacterAlreadyExistsError, CharacterNotFoundError } from '../errors/Errors';
+import { CampaignAlreadyExistsError, CampaignFailedToCreateError, CampaignNotFoundError, CharacterAlreadyExistsError, CharacterNotFoundError, PlayerNoPermissionsError } from '../errors/Errors';
 import { Campaign } from './Campaign';
+import { Roll } from './Roll';
 export class Player {
     info:Database["public"]["Tables"]["players"]["Row"];
     client:DiriceDBClient;
@@ -74,11 +75,30 @@ export class Player {
             throw new DiriceError(error.message)
         }
     }
+    async getManageableRolls () {
+        const manageableCampaigns = await this.getManageableCampaigns()
+        const manageableCharacters = await this.getManageableCharacters()
+        let ROLLS_SELECTION = supabase.from("rolls").select("*").or(`campaign_id.in.${manageableCampaigns.map((campaign:Campaign) => campaign.getID())}`).or(`character_id.in.${manageableCharacters.map((character:Character) => character.getID())}`)
+        const { data, error } = (await ROLLS_SELECTION);
+        if(!error){
+            return data.map((item) => new Roll(item))
+        }else{
+            throw new DiriceError(error.message)
+        }
+    }
     async updateSettings (settings:PLAYERS_TABLE["Update"]) {
         let SETTINGS_UPDATE = supabase.from("players").update(settings).eq("user_id", this.info.user_id)
         const { data, error } = (await SETTINGS_UPDATE);
         if(error){
             throw new DiriceError(error.message) 
+        }
+    }
+    async kickCharacterFromCampaign(campaign:Campaign, character:Character){
+        const manageableCampaigns = await this.getManageableCampaigns()
+        if(!manageableCampaigns.includes(campaign)){
+            throw new PlayerNoPermissionsError("KICK_CHARACTER_FROM_CAMPAIGN")
+        }else{
+            await character.joinCampaign(null);
         }
     }
 }

@@ -318,6 +318,20 @@ export class DiriceDBClient {
                 }
             },
             /**
+             * Updates rolls.
+             */
+            update: async function () {
+                params = params as ROLL_TABLE["Update"]
+                if (!params.id) {
+                    throw new DiriceError("ID of roll must be provided when updating!")
+                }
+                let ROLL_UPDATE = supabase.from("rolls").update(params).eq("id", params.id);
+                const { data, error } = (await ROLL_UPDATE);
+                if (error) {
+                    throw new DiriceError(error.message)
+                }
+            },
+            /**
              * Deletes rolls.
              */
             delete: async function () {

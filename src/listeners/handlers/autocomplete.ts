@@ -98,11 +98,14 @@ export default async function handleAutocomplete(client: Client, EraserTail: Era
         case "link-campaign":
             const campaigns:ApplicationCommandOptionChoiceData[] = [];
             const Campaigns:Campaign[] = await DiriceClient.campaigns().get(focusedValue.value);
+            
             for (const campaign of Campaigns){
-                campaigns.push({
-                    name: campaign.getName(),
-                    value: campaign.getID()
-                })
+                if(campaign.isOpen() || campaign.getCanManage().includes(interaction.user.id)){
+                    campaigns.push({
+                        name: campaign.getName(),
+                        value: campaign.getID()
+                    })
+                }
             }
             await interaction.respond(campaigns)
             break;

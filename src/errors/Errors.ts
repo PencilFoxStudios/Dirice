@@ -103,3 +103,13 @@ export class StorageBucketRejectError extends DiriceError{
         super(`The storage bucket rejected your request.\n${msg}`)
     }
 }
+export class CampaignNotOpenError extends DiriceError{
+    constructor(){
+        super(`The campaign is not open for new joins!`)
+    }
+}
+export class PlayerNoPermissionsError extends DiriceError{
+    constructor(perm:string){
+        super(`You do not have permissions to ${perm}!`)
+    }
+}

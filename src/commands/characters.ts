@@ -7,8 +7,9 @@ import * as PNFXEmbeds from "../helpers/Embeds"
 import * as PNFXTypes from "../helpers/types";
 import PNFXMenu from "../helpers/Menu";
 import { DiriceDBClient } from "../api/DiriceDBClient";
-import { Character } from "../objects/Character";
-import { CharacterAlreadyExistsError, StorageBucketRejectError } from "../errors/Errors";
+import { Character, CharacterStat } from "../objects/Character";
+import { CampaignNotOpenError, CharacterAlreadyExistsError, StorageBucketRejectError } from "../errors/Errors";
+import { Roll } from "../objects/Roll";
 
 export class Characters extends PNFXCommand {
     constructor() {
@@ -147,6 +148,127 @@ export class Characters extends PNFXCommand {
                             .setAutocomplete(true)
                     )
             )
+            .addSubcommand((subcommand: SlashCommandSubcommandBuilder) =>
+            subcommand
+                .setName('link-to-campaign')
+                .setDescription("Link a character to a campaign. (This will sync the character's stats with the campaign's rolls.)")
+                .addIntegerOption((option: SlashCommandIntegerOption) =>
+                    option
+                        .setName("manage-character")
+                        .setDescription("The character you would like to link.")
+                        .setRequired(true)
+                        .setAutocomplete(true)
+                )
+                .addIntegerOption((option: SlashCommandIntegerOption) =>
+                option
+                    .setName("link-campaign")
+                    .setDescription("The campaign you would like to link the character to.")
+                    .setRequired(true)
+                    .setAutocomplete(true)
+            )
+        )
+        /**
+         * @TODO Implement these!
+         */
+        .addSubcommand((subcommand: SlashCommandSubcommandBuilder) =>
+        subcommand
+            .setName('edit')
+            .setDescription("Edit a character.")
+            .addIntegerOption((option: SlashCommandIntegerOption) =>
+                option
+                    .setName("manage-character")
+                    .setDescription("The character you would like to edit.")
+                    .setRequired(true)
+                    .setAutocomplete(true)
+            )
+            .addStringOption((option: SlashCommandStringOption) =>
+            option
+                .setName("name")
+                .setDescription("The character's full name.")
+                .setRequired(false)
+            )
+            .addAttachmentOption((option: SlashCommandAttachmentOption) =>
+            option
+                .setName("photo")
+                .setDescription("The character's photo.")
+                .setRequired(false)
+            )
+            .addStringOption((option: SlashCommandStringOption) =>
+            option
+                .setName("description")
+                .setDescription("The character's description.")
+                .setRequired(false)
+            )
+            .addStringOption((option: SlashCommandStringOption) =>
+            option
+                .setName("quote")
+                .setDescription("A quote that the character said/would say.")
+                .setRequired(false)
+            )
+        )
+        .addSubcommand((subcommand: SlashCommandSubcommandBuilder) =>
+        subcommand
+            .setName('delete')
+            .setDescription("Delete a character. This cannot be undone!")
+            .addIntegerOption((option: SlashCommandIntegerOption) =>
+                option
+                    .setName("manage-character")
+                    .setDescription("The character you would like to delete.")
+                    .setRequired(true)
+                    .setAutocomplete(true)
+            )
+        )
+        .addSubcommand((subcommand: SlashCommandSubcommandBuilder) =>
+            subcommand
+            .setName("add-roll")
+            .setDescription("Adds a roll to your character.")
+            .addIntegerOption((option: SlashCommandIntegerOption) =>
+            option
+                .setName("manage-character")
+                .setDescription("The character you would like to delete.")
+                .setRequired(true)
+                .setAutocomplete(true)
+            )
+            .addIntegerOption((option: SlashCommandIntegerOption) =>
+                option
+                    .setName("manage-roll")
+                    .setDescription("The roll you would like to add.")
+                    .setRequired(true)
+            )
+        )
+
+        .addSubcommand((subcommand: SlashCommandSubcommandBuilder) =>
+            subcommand
+            .setName("edit-stats")
+            .setDescription("Edit the stats of your characters.")
+            .addIntegerOption((option: SlashCommandIntegerOption) =>
+                option
+                    .setName("manage-stat")
+                    .setDescription("The stat you would like to edit.")
+                    .setRequired(true)
+                    .setAutocomplete(true)
+            )
+            .addIntegerOption((option: SlashCommandIntegerOption) =>
+                option
+                    .setName("stat-modifier")
+                    .setDescription("The new modifier/bonus you would like to set for this stat.")
+                    .setRequired(true)
+                    .setMinValue(-10000)
+                    .setMaxValue(10000)
+            ))
+        .addSubcommand((subcommand: SlashCommandSubcommandBuilder) =>
+            subcommand
+            .setName("remove-roll")
+            .setDescription("Remove a roll from a character. (WILL COME BACK IF CHARACTER IS LINKED TO A CAMPAIGN!)")
+            .addIntegerOption((option: SlashCommandIntegerOption) =>
+                option
+                    .setName("manage-roll")
+                    .setDescription("The roll you would like to remove.")
+                    .setRequired(true)
+                    .setAutocomplete(true)
+            ))
+
+            
 
     }
 
@@ -357,6 +479,150 @@ export class Characters extends PNFXCommand {
                 await character.fetchStats();
                 await interaction.editReply({
                     embeds: [PNFXEmbeds.characterInfoEmbed(character)]
+                });
+                break;
+            case "link-to-campaign":
+                const campaignID = interaction.options.getInteger("link-campaign")
+                if (campaignID == null) {
+                    await character.joinCampaign(null)
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.success(`Character ${character.getName()} is now detached from any campaign!`)]
+                    });
+                    return
+                }
+                await character.fetch();
+                await character.fetchCampaign();
+                const charCampaign = character.getCampaign()
+                const desiredCampaign = (await DiriceClient.campaigns({ id: campaignID }).get())
+                if (desiredCampaign.length !== 1) {
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("CAMPAIGN_NOT_FOUND")]
+                    });
+                    return
+                }
+                const desiredCampaignInDB = desiredCampaign[0];
+                try {
+                    await character.joinCampaign(desiredCampaignInDB)
+                } catch (error) {
+                    if(error instanceof CampaignNotOpenError){
+                        await interaction.editReply({
+                            embeds: [PNFXEmbeds.error("CAMPAIGN_NOT_OPEN")]
+                        });
+                        return
+                    }
+                    throw error;
+                }
+                await desiredCampaignInDB.syncStatsWithCharacters()
+                await interaction.editReply({
+                    embeds: [PNFXEmbeds.success(`Character ${character.getName()} has been linked to campaign ${desiredCampaignInDB.getName()}!`)]
+                });
+                
+                break;
+            case "edit":
+                if((character.getOwnerID() !== interaction.user.id) && !character.getCanManage().includes(interaction.user.id)){
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("GENERAL_COMMAND_ERROR", "You do not have permission to edit this character!")]
+                    });
+                    return
+                }
+                await DiriceClient.characters({
+                    id: character.getID(),
+                    name: interaction.options.getString("name")??undefined,
+                    description: interaction.options.getString("description")??undefined,
+                    quote: interaction.options.getString("quote")??undefined,
+                }).update()
+                await character.fetch()
+                await interaction.editReply({
+                    embeds: [PNFXEmbeds.success(`Character ${character.getName()} has been edited!`)]
+                });
+                break;
+            case "delete":
+                if((character.getOwnerID() !== interaction.user.id) && !character.getCanManage().includes(interaction.user.id)){
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("GENERAL_COMMAND_ERROR", "You do not have permission to delete this character!")]
+                    });
+                    return
+                }
+                await character.delete()
+                await interaction.editReply({
+                    embeds: [PNFXEmbeds.success(`Character ${character.getName()} has been deleted!`)]
+                });
+                break;
+            case "add-roll":
+                const rollsFound:Roll[] = await ( DiriceClient.roll({id: interaction.options.getInteger("manage-roll")!})).get()
+                if(rollsFound.length !== 1){
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("ROLL_NOT_FOUND")]
+                    });
+                    return
+                }
+                const roll = rollsFound[0];
+                if(!roll){
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("GENERAL_COMMAND_ERROR")]
+                    });
+                    return
+                }
+                await roll.fetchOwner();
+                const manageableRolls = await Player.getManageableRolls();
+                if(!manageableRolls.some((rollFound:Roll) => rollFound.getID() == roll.getID())){
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("GENERAL_COMMAND_ERROR", "You do not have permission to manage this roll!")]
+                    });
+                    return
+                }
+                await roll.linkToCharacter(character)
+                await interaction.editReply({
+                    embeds: [PNFXEmbeds.success(`Roll ${roll.getName()} has been added to character ${character.getName()}!`)]
+                });
+                break;
+            case "edit-stats":
+                const statID = interaction.options.getInteger("manage-stat")
+                const statModifier = interaction.options.getInteger("stat-modifier")
+                if (statID == null || statModifier == null) {
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("GENERAL_COMMAND_ERROR")]
+                    });
+                    return
+                }
+                await character.fetchStats();
+                const statToEdit = character.getStats().find((stat: CharacterStat) => stat.roll.getID() == statID)
+                if(!statToEdit){
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("STAT_NOT_FOUND")]
+                    });
+                    return
+                }
+                await character.updateStats([{
+                    roll_id: statID,
+                    roll_modifier: statModifier
+                }])
+                await character.fetchStats();
+                await interaction.editReply({
+                    embeds: [PNFXEmbeds.characterStatsEmbed(character)]
+                });
+                break;
+            case "remove-roll":
+                const rollToRemove = interaction.options.getInteger("manage-roll")
+                if (rollToRemove == null) {
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("GENERAL_COMMAND_ERROR")]
+                    });
+                    return
+                }
+                await character.fetchStats();
+                const statToRemove = character.getStats().find((stat: CharacterStat) => stat.roll.getID() == rollToRemove)
+                if(!statToRemove){
+                    await interaction.editReply({
+                        embeds: [PNFXEmbeds.error("STAT_NOT_FOUND")]
+                    });
+                    return
+                }
+                const RollToRemoveFromCharacter = statToRemove.roll;
+                await character.removeStat(RollToRemoveFromCharacter);
+                await character.fetchStats();
+                await interaction.editReply({
+                    embeds: [PNFXEmbeds.characterStatsEmbed(character)]
                 });
                 break;
         }

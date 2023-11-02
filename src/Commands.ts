@@ -5,7 +5,8 @@ import { Characters } from "./commands/characters";
 import { Mod } from "./commands/mod";
 import { Openmodel } from "./commands/openmodel";
 import { Ping } from "./commands/ping";
-import { Roll } from "./commands/roll";
+import { Dice } from "./commands/dice";
+import { Rolls } from "./commands/rolls";
 
 const Commands: PNFXCommand[] = []; 
 
@@ -23,11 +24,15 @@ const Commands: PNFXCommand[] = [];
             }
 
             if(true){ 
-                Commands.push(new Roll())
+                Commands.push(new Dice())
             }
 
             if(true){
                 Commands.push(new Campaigns())
+            }
+
+            if(true){
+                Commands.push(new Rolls())
             }
 
 

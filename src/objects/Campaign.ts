@@ -11,6 +11,9 @@ export class Campaign {
     constructor(info:Database["public"]["Tables"]["campaigns"]["Row"] ){
         this.info = info;
     }
+    isOpen(){
+        return this.info.open;
+    }
     getDescription(){
         return this.info.description;
     }
@@ -39,7 +42,7 @@ export class Campaign {
         }
         return this.characters;
     }
-    async createRoll(name:string, diceAmount:number, numOfSides:number){
+    async createRoll(name:string, diceAmount:number=1, numOfSides:number=20){
         await this.client.roll({
             campaign_id: this.info.id,
             dice_amt: diceAmount,
